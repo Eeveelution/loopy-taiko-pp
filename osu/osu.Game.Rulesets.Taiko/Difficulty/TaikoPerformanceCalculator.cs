@@ -35,29 +35,27 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             mods = Score.Mods;
 
             double base_length = Math.Log((totalHits + 1500.0) / 1500.0, 2.0) /*/ 10.0 + 1.0*/;
+
             double multiplier = 1.0;
+            double overall_difficulty = Attributes.Beatmap.BeatmapInfo.BaseDifficulty.OverallDifficulty;
+            double hit_window;
 
             if (mods.Any(m => m is ModNoFail))
                 multiplier *= 0.9;
             if (mods.Any(m => m is ModHidden))
                 multiplier *= 1.05;
 
-            double overall_difficulty = Attributes.Beatmap.BeatmapInfo.BaseDifficulty.OverallDifficulty;
-
-
             if (mods.Any(m => m is ModEasy))
             {
                 multiplier         *=  0.9;
                 overall_difficulty /= 2.0;
             }
-
             if (mods.Any(m => m is ModHardRock))
             {
                 overall_difficulty = Math.Min(overall_difficulty * 1.4, 10.0);
             }
-
-            //double hit_window = 49.5 - (overall_difficulty / 0.5) * 1.5;
-            double hit_window = Math.Floor(-3 * overall_difficulty) + 49.5;
+            
+            hit_window = Math.Floor(-3 * overall_difficulty) + 49.5;
 
             if (mods.Any(m => m is ModDoubleTime))
                 hit_window *= 2.0 / 3.0;
@@ -66,17 +64,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
 
             double diffstrain = (((Math.Pow((470.0 * Attributes.StarRating - 7.0),3.0)) / 100000000.0)
-                                * ((base_length                                                                         / 10.0) + 1.0)
+                                * ((base_length / 10.0) + 1.0)
                                 * Math.Sqrt(((double)totalHits - (double)Score.Statistics.GetOrDefault(HitResult.Miss)) / (double)totalHits)
                                 * Math.Pow(0.985 , (double)Score.Statistics.GetOrDefault(HitResult.Miss))
                                 * Score.Accuracy)
                                 * (mods.Any(m => m is ModHidden) ? 1.025 : 1.0)
                                 * (mods.Any(m => m is ModFlashlight) ? 1.05 * ((base_length / 10) + 1) : 1.0);
-
-            /*double accstrain = (Math.Pow(150.0 / Attributes.GreatHitWindow, 1.1) + (34.5 - Attributes.GreatHitWindow) / 15.0)
-                               * Math.Pow(Score.Accuracy, 15.0)
-                               * Math.Pow(base_length, 0.3) * 3.75
-                               * Math.Pow(Attributes.StarRating, 1.1);*/
 
             double accstrain =  (Math.Pow((150 / hit_window), 1.1) + (34.5 - hit_window) / 15)
                 * Math.Pow(Score.Accuracy, 15)
