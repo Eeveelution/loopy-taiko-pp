@@ -1,0 +1,13 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Rider ignored files
+/contentModel.xml
+/modules.xml
+/.idea.osu.Tools.iml
+/projectSettingsUpdater.xml
+# Datasource local storage ignored files
+/../../../../../../:\source-code\osu-tools-f52249ae0ff45791a9b0e06c979d648383528aa4\.idea\.idea.osu.Tools\.idea/dataSources/
+/dataSources.local.xml
+# Editor-based HTTP Client requests
+/httpRequests/
