@@ -31,6 +31,47 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         private const double SliderVelocityBaseBpm = 175.0;
 
+        private double GetAverageBpmWeighed()
+        {
+            //Total Objects in the Map
+            int totalObjects = Beatmap.HitObjects.Count;
+            //Average BPM, this is getting returned
+            double average = 0.0;
+            double ms = Beatmap.ControlPointInfo.TimingPoints[0].Time;
+
+            int i = 0;
+
+            foreach (TimingControlPoint point in Beatmap.ControlPointInfo.TimingPoints)
+            {
+                if (Beatmap.ControlPointInfo.TimingPoints.Count != i + 1)
+                {
+                    TimingControlPoint nextPoint = Beatmap.ControlPointInfo.TimingPoints[i + 1];
+                    double weighedBpm = point.BPM;
+                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= ms && hit.StartTime < nextPoint.Time).Count();
+
+                    weighedBpm = ((double)affectedObjects / (double)totalObjects) * point.BPM;
+
+                    average += weighedBpm;
+
+                    ms = point.Time;
+                    i++;
+                }
+                else
+                {
+                    double weighedBpm = point.BPM;
+                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < 13298761328).Count();
+
+                    weighedBpm = ((double)affectedObjects / (double)totalObjects) * point.BPM;
+
+                    average += weighedBpm;
+
+                    ms = point.Time;
+                    i++;
+                }
+            }
+            return average;
+        }
+
         private double GetSliderVelocityDifficulty()
         {
             double AverageSV = 0.0;
@@ -43,6 +84,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             foreach (DifficultyControlPoint svChange in SliderVelocityChanges)
             {
+
                 //Add all of the Slider Velocities up only if the Slider Velocity of the Timing point is unique
                 /* Done to prevent Multiple timing points with the exact same SV to lower SV boost
                  * Since this sort of behaviour shouldn't happen I made it check if the last Changes SV
@@ -75,6 +117,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null)
         {
+            double average_bpm = GetAverageBpmWeighed();
             //Sets mods to the current score's Mods
             mods = Score.Mods;
             double base_length = Math.Log((totalHits + 1500.0) / 1500.0, 2.0) /*/ 10.0 + 1.0*/;
