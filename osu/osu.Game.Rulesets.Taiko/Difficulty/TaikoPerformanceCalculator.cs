@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using osu.Framework.Extensions;
 using osu.Game.Beatmaps;
+using osu.Game.Beatmaps.ControlPoints;
 using osu.Game.Rulesets.Difficulty;
 using osu.Game.Rulesets.Difficulty.Skills;
 using osu.Game.Rulesets.Mods;
@@ -28,7 +29,30 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         {
         }
 
+        private const double SliderVelocityBaseBpm = 175.0;
 
+        private double GetSliderVelocityDifficulty()
+        {
+            double AverageSV = 0.0;
+            //List of Timing Points that control SV
+            IReadOnlyList<DifficultyControlPoint> SliderVelocityChanges = Beatmap.ControlPointInfo.DifficultyPoints;
+            //To Prevent Division by 0 problems, ignore maps with no SV changes and give them no bonus
+            if (SliderVelocityChanges.Count == 0) return 1;
+
+            foreach (DifficultyControlPoint svChange in SliderVelocityChanges)
+                //Add all of the Slider Velocities up
+                AverageSV += svChange.SpeedMultiplier;
+            //Define total Boost
+            double TotalBoost = AverageSV;
+            //Divide by the Amount of Changes to give us an Average
+            TotalBoost /= (double)SliderVelocityChanges.Count;
+            //Get Average BPM of the Map
+            double averageBpm = (Beatmap.ControlPointInfo.BPMMinimum + Beatmap.ControlPointInfo.BPMMaximum) / 2;
+            //Make High BPM Maps award more SV Bonus because Fast SV on High BPM is harder than Fast SV on Low Bpm
+            TotalBoost *= averageBpm / SliderVelocityBaseBpm;
+
+            return TotalBoost;
+        }
 
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null)
         {
@@ -41,6 +65,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double overall_difficulty = Attributes.Beatmap.BeatmapInfo.BaseDifficulty.OverallDifficulty;
             //Hit window for 300 hits in milliseconds (Used because Attributes.GreatHitWindow is unreliable)
             double hit_window;
+            //Slider Velocity Bonus
+            double svBonus = GetSliderVelocityDifficulty();
             //Sets Multiplier for Nofail, Nofail Nerfs a score by 10%
             if (mods.Any(m => m is ModNoFail))
                 multiplier *= 0.9;
@@ -50,7 +76,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             //Apply Multiplier for Easy which has the same 10% as Nofail, and adjust Overall Difficulty Values
             if (mods.Any(m => m is ModEasy))
             {
-                multiplier         *=  0.9;
+                multiplier         *= 0.9;
+                svBonus            *= 0.9;
                 overall_difficulty /= 2.0;
             }
             //Hardrock gets a 7% buff and  changes OD right now
@@ -58,6 +85,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             {
                 overall_difficulty =  Math.Min(overall_difficulty * 1.4, 10.0);
                 multiplier         *= 1.07;
+                svBonus            *= 1.1;
             }
             //Calculate Hit window for 300 hits
             hit_window = Math.Floor(-3 * overall_difficulty) + 49.5;
