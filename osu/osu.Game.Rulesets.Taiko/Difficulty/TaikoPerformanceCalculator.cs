@@ -46,16 +46,19 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 multiplier *= 0.9;
             //Sets Multiplier for Hidden, Hidden buffs a score by a straight 5%
             if (mods.Any(m => m is ModHidden))
-                multiplier *= 1.05;
+                multiplier *= 1.1;
             //Apply Multiplier for Easy which has the same 10% as Nofail, and adjust Overall Difficulty Values
             if (mods.Any(m => m is ModEasy))
             {
                 multiplier         *=  0.9;
                 overall_difficulty /= 2.0;
             }
-            //Hardrock doesn't change multipliers, only changes OD right now
+            //Hardrock gets a 7% buff and  changes OD right now
             if (mods.Any(m => m is ModHardRock))
-                overall_difficulty = Math.Min(overall_difficulty * 1.4, 10.0);
+            {
+                overall_difficulty =  Math.Min(overall_difficulty * 1.4, 10.0);
+                multiplier         *= 1.07;
+            }
             //Calculate Hit window for 300 hits
             hit_window = Math.Floor(-3 * overall_difficulty) + 49.5;
 
