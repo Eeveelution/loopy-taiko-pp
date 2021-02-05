@@ -31,6 +31,59 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         private const double SliderVelocityBaseBpm = 175.0;
 
+        private double GetAverageSVWeighed()
+        {
+            if (Beatmap.ControlPointInfo.DifficultyPoints.Count == 0) return 1.0;
+            //Total Objects in the Map
+            int totalObjects = Beatmap.HitObjects.Count;
+            //Average BPM, this is getting returned
+            double average = 0.0;
+            int i = 0;
+
+            if (Beatmap.HitObjects.Where(hit => hit.StartTime >= 0 && hit.StartTime < Beatmap.ControlPointInfo.DifficultyPoints[0].Time).Any())
+            {
+                double weighedBpm = 1.0;
+                int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= 0 && hit.StartTime < Beatmap.ControlPointInfo.DifficultyPoints[0].Time).Count();
+
+                weighedBpm = ((double)affectedObjects / (double)totalObjects) * 1.0;
+
+                average += weighedBpm;
+            }
+
+            foreach (DifficultyControlPoint point in Beatmap.ControlPointInfo.DifficultyPoints)
+            {
+
+                if (Beatmap.ControlPointInfo.DifficultyPoints.Count != i + 1)
+                {
+                    DifficultyControlPoint nextPoint = Beatmap.ControlPointInfo.DifficultyPoints[i + 1];
+                    double weighedBpm = point.SpeedMultiplier;
+                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < nextPoint.Time).Count();
+
+                    weighedBpm = ((double)affectedObjects / (double)totalObjects) * point.SpeedMultiplier;
+
+                    Console.WriteLine($"{i}: weighed: {weighedBpm} | sv: {point.SpeedMultiplier} | objects affected: {affectedObjects}");
+
+                    average += weighedBpm;
+                    i++;
+                }
+                else
+                {
+                    double weighedBpm = point.SpeedMultiplier;
+                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < 13298761328).Count();
+
+                    weighedBpm = ((double)affectedObjects / (double)totalObjects) * point.SpeedMultiplier;
+
+                    Console.WriteLine($"{i}: weighed: {weighedBpm} | sv: {point.SpeedMultiplier} | objects affected: {affectedObjects}");
+
+
+                    average += weighedBpm;
+                    i++;
+                }
+            }
+            return average;
+        }
+
+
         private double GetAverageBpmWeighed()
         {
             //Total Objects in the Map
@@ -50,9 +103,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                     weighedBpm = ((double)affectedObjects / (double)totalObjects) * point.BPM;
 
                     average += weighedBpm;
-
-                    //Console.WriteLine($"{i}: weighed: {weighedBpm} | bpm: {point.BPM} | objects affected: {affectedObjects}");
-
                     i++;
                 }
                 else
@@ -63,9 +113,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                     weighedBpm = ((double)affectedObjects / (double)totalObjects) * point.BPM;
 
                     average += weighedBpm;
-
-                    //Console.WriteLine($"{i}: weighed: {weighedBpm} | bpm: {point.BPM} | objects affected: {affectedObjects}");
-
                     i++;
                 }
             }
@@ -74,50 +121,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         private double GetSliderVelocityDifficulty()
         {
-            double AverageSV = 0.0;
-            //List of Timing Points that control SV
-            IReadOnlyList<DifficultyControlPoint> SliderVelocityChanges = Beatmap.ControlPointInfo.DifficultyPoints;
-            //To Prevent Division by 0 problems, ignore maps with no SV changes and give them no bonus
-            if (SliderVelocityChanges.Count == 0) return 1;
-
-            DifficultyControlPoint lastSvChange = null;
-
-            foreach (DifficultyControlPoint svChange in SliderVelocityChanges)
-            {
-
-                //Add all of the Slider Velocities up only if the Slider Velocity of the Timing point is unique
-                /* Done to prevent Multiple timing points with the exact same SV to lower SV boost
-                 * Since this sort of behaviour shouldn't happen I made it check if the last Changes SV
-                 */
-                //If it's null we can assume it's the very first timing point, and it should also get taken into account
-                if (lastSvChange == null)
-                {
-                    AverageSV    += svChange.SpeedMultiplier;
-                    lastSvChange =  svChange;
-                    continue;
-                }
-                //Check if this Timing Points SV isn't the same as the last one
-                if (svChange.SpeedMultiplier != lastSvChange.SpeedMultiplier)
-                {
-                    AverageSV    += svChange.SpeedMultiplier;
-                    lastSvChange =  svChange;
-                }
-            }
-            //Define total Boost
-            double TotalBoost = AverageSV;
-            //Divide by the Amount of Changes to give us an Average
-            TotalBoost /= (double)SliderVelocityChanges.Count;
-            //Get Average BPM of the Map
-            double averageBpm = (Beatmap.ControlPointInfo.BPMMinimum + Beatmap.ControlPointInfo.BPMMaximum) / 2;
-            //Make High BPM Maps award more SV Bonus because Fast SV on High BPM is harder than Fast SV on Low Bpm
-            TotalBoost *= averageBpm / SliderVelocityBaseBpm;
-
-            return TotalBoost;
+            return 0.0;
         }
 
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null)
         {
             double average_bpm = GetAverageBpmWeighed();
+            double average_sv = GetAverageSVWeighed();
             //Sets mods to the current score's Mods
             mods = Score.Mods;
             double base_length = Math.Log((totalHits + 1500.0) / 1500.0, 2.0) /*/ 10.0 + 1.0*/;
