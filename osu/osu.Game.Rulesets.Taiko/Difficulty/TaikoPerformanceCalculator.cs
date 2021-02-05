@@ -39,9 +39,28 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             //To Prevent Division by 0 problems, ignore maps with no SV changes and give them no bonus
             if (SliderVelocityChanges.Count == 0) return 1;
 
+            DifficultyControlPoint lastSvChange = null;
+
             foreach (DifficultyControlPoint svChange in SliderVelocityChanges)
-                //Add all of the Slider Velocities up
-                AverageSV += svChange.SpeedMultiplier;
+            {
+                //Add all of the Slider Velocities up only if the Slider Velocity of the Timing point is unique
+                /* Done to prevent Multiple timing points with the exact same SV to lower SV boost
+                 * Since this sort of behaviour shouldn't happen I made it check if the last Changes SV
+                 */
+                //If it's null we can assume it's the very first timing point, and it should also get taken into account
+                if (lastSvChange == null)
+                {
+                    AverageSV    += svChange.SpeedMultiplier;
+                    lastSvChange =  svChange;
+                    continue;
+                }
+                //Check if this Timing Points SV isn't the same as the last one
+                if (svChange.SpeedMultiplier != lastSvChange.SpeedMultiplier)
+                {
+                    AverageSV    += svChange.SpeedMultiplier;
+                    lastSvChange =  svChange;
+                }
+            }
             //Define total Boost
             double TotalBoost = AverageSV;
             //Divide by the Amount of Changes to give us an Average
@@ -102,7 +121,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                                 * Math.Pow(0.985 , (double)Score.Statistics.GetOrDefault(HitResult.Miss))
                                 * Score.Accuracy)
                                 * (mods.Any(m => m is ModHidden) ? 1.025 : 1.0)
-                                * (mods.Any(m => m is ModFlashlight) ? 1.05 * ((base_length / 10) + 1) : 1.0);
+                                * (mods.Any(m => m is ModFlashlight) ? 1.05 * ((base_length / 10) + 1) : 1.0)
+                                * svBonus;
             //Accuracy Strain Calculation
             double accstrain =  (Math.Pow((150 / hit_window), 1.1) + (34.5 - hit_window) / 15)
                 * Math.Pow(Score.Accuracy, 15)
