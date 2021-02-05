@@ -42,12 +42,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             if (Beatmap.HitObjects.Where(hit => hit.StartTime >= 0 && hit.StartTime < Beatmap.ControlPointInfo.DifficultyPoints[0].Time).Any())
             {
-                double weighedBpm = 1.0;
+                double weighedSv = 1.0;
                 int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= 0 && hit.StartTime < Beatmap.ControlPointInfo.DifficultyPoints[0].Time).Count();
 
-                weighedBpm = ((double)affectedObjects / (double)totalObjects) * 1.0;
+                weighedSv = ((double)affectedObjects / (double)totalObjects) * 1.0;
 
-                average += weighedBpm;
+                average += weighedSv;
             }
 
             foreach (DifficultyControlPoint point in Beatmap.ControlPointInfo.DifficultyPoints)
@@ -56,27 +56,27 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 if (Beatmap.ControlPointInfo.DifficultyPoints.Count != i + 1)
                 {
                     DifficultyControlPoint nextPoint = Beatmap.ControlPointInfo.DifficultyPoints[i + 1];
-                    double weighedBpm = point.SpeedMultiplier;
+                    double weighedSv = point.SpeedMultiplier;
                     int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < nextPoint.Time).Count();
 
-                    weighedBpm = ((double)affectedObjects / (double)totalObjects) * point.SpeedMultiplier;
+                    weighedSv = ((double)affectedObjects / (double)totalObjects) * point.SpeedMultiplier;
 
-                    Console.WriteLine($"{i}: weighed: {weighedBpm} | sv: {point.SpeedMultiplier} | objects affected: {affectedObjects}");
+                    Console.WriteLine($"{i}: weighed: {weighedSv} | sv: {point.SpeedMultiplier} | objects affected: {affectedObjects}");
 
-                    average += weighedBpm;
+                    average += weighedSv;
                     i++;
                 }
                 else
                 {
-                    double weighedBpm = point.SpeedMultiplier;
+                    double weighedSv = point.SpeedMultiplier;
                     int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < 13298761328).Count();
 
-                    weighedBpm = ((double)affectedObjects / (double)totalObjects) * point.SpeedMultiplier;
+                    weighedSv = ((double)affectedObjects / (double)totalObjects) * point.SpeedMultiplier;
 
-                    Console.WriteLine($"{i}: weighed: {weighedBpm} | sv: {point.SpeedMultiplier} | objects affected: {affectedObjects}");
+                    Console.WriteLine($"{i}: weighed: {weighedSv} | sv: {point.SpeedMultiplier} | objects affected: {affectedObjects}");
 
 
-                    average += weighedBpm;
+                    average += weighedSv;
                     i++;
                 }
             }
