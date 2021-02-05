@@ -37,8 +37,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             int totalObjects = Beatmap.HitObjects.Count;
             //Average BPM, this is getting returned
             double average = 0.0;
-            double ms = Beatmap.ControlPointInfo.TimingPoints[0].Time;
-
             int i = 0;
 
             foreach (TimingControlPoint point in Beatmap.ControlPointInfo.TimingPoints)
@@ -47,13 +45,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 {
                     TimingControlPoint nextPoint = Beatmap.ControlPointInfo.TimingPoints[i + 1];
                     double weighedBpm = point.BPM;
-                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= ms && hit.StartTime < nextPoint.Time).Count();
+                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < nextPoint.Time).Count();
 
                     weighedBpm = ((double)affectedObjects / (double)totalObjects) * point.BPM;
 
                     average += weighedBpm;
 
-                    ms = point.Time;
+                    //Console.WriteLine($"{i}: weighed: {weighedBpm} | bpm: {point.BPM} | objects affected: {affectedObjects}");
+
                     i++;
                 }
                 else
@@ -65,7 +64,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
                     average += weighedBpm;
 
-                    ms = point.Time;
+                    //Console.WriteLine($"{i}: weighed: {weighedBpm} | bpm: {point.BPM} | objects affected: {affectedObjects}");
+
                     i++;
                 }
             }
