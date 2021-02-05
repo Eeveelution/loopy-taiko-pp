@@ -127,8 +127,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double overall_difficulty = Attributes.Beatmap.BeatmapInfo.BaseDifficulty.OverallDifficulty;
             //Hit window for 300 hits in milliseconds (Used because Attributes.GreatHitWindow is unreliable)
             double hit_window;
-            //Slider Velocity Bonus
-            double svBonus = GetSliderVelocityDifficulty();
             //Sets Multiplier for Nofail, Nofail Nerfs a score by 10%
             if (mods.Any(m => m is ModNoFail))
                 multiplier *= 0.9;
@@ -139,7 +137,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             if (mods.Any(m => m is ModEasy))
             {
                 multiplier         *= 0.9;
-                svBonus            *= 0.9;
                 overall_difficulty /= 2.0;
             }
             //Hardrock gets a 7% buff and  changes OD right now
@@ -147,7 +144,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             {
                 overall_difficulty =  Math.Min(overall_difficulty * 1.4, 10.0);
                 multiplier         *= 1.07;
-                svBonus            *= 1.1;
             }
             //Calculate Hit window for 300 hits
             hit_window = Math.Floor(-3 * overall_difficulty) + 49.5;
@@ -164,8 +160,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                                 * Math.Pow(0.985 , (double)Score.Statistics.GetOrDefault(HitResult.Miss))
                                 * Score.Accuracy)
                                 * (mods.Any(m => m is ModHidden) ? 1.025 : 1.0)
-                                * (mods.Any(m => m is ModFlashlight) ? 1.05 * ((base_length / 10) + 1) : 1.0)
-                                * svBonus;
+                                * (mods.Any(m => m is ModFlashlight) ? 1.05 * ((base_length / 10) + 1) : 1.0);
             //Accuracy Strain Calculation
             double accstrain =  (Math.Pow((150 / hit_window), 1.1) + (34.5 - hit_window) / 15)
                 * Math.Pow(Score.Accuracy, 15)
