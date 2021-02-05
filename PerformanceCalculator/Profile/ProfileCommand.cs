@@ -129,7 +129,7 @@ namespace PerformanceCalculator.Profile
                         new Cell("position change"),
                         localOrdered.Select(item => new[]
                         {
-                            new Cell($"{item.Beatmap.OnlineBeatmapID} - {item.Beatmap}"),
+                            new Cell($"{item.Beatmap.OnlineBeatmapID} - {item.Beatmap} +{item.Mods}"),
                             new Cell($"{item.LivePP:F1}") { Align = Align.Right },
                             new Cell($"{item.LocalPP:F1}") { Align = Align.Right },
                             new Cell($"{item.LocalPP - item.LivePP:F1}") { Align = Align.Right },
