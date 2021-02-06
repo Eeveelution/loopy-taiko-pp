@@ -112,7 +112,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 {
                     double weighedSv = 0.0;
                     //Gets all Affected Objects from the Timing point until the very last Object in the Map
-                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < Beatmap.HitObjects[Beatmap.HitObjects.Count - 1] + 1).Count();
+                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < Beatmap.HitObjects[Beatmap.HitObjects.Count - 1].StartTime + 1).Count();
                     //Weighed Slider Velocity is always: BPM * Slider Velocity
                     weighedSv = Beatmap.ControlPointInfo.TimingPointAt(point.Time).BPM * point.SpeedMultiplier;
                     //After that calculation we cap the Value at 700, this is to Prevent overuse of Ninja Notes
@@ -133,9 +133,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null)
         {
+            //Gets Effective Average (BPM * Slider Velocty) for Scroll Speed Calcuation
             double average_sv = GetAverageSVWeighed();
             //Sets mods to the current score's Mods
             mods = Score.Mods;
+            //Length Bonus
             double base_length = Math.Log((totalHits + 1500.0) / 1500.0, 2.0) /*/ 10.0 + 1.0*/;
             //Mod Multiplier
             double multiplier = 1.0;
