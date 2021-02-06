@@ -29,8 +29,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         {
         }
 
-        private const double SliderVelocityBaseBpm = 175.0;
-
         private double GetAverageSVWeighed()
         {
             List<DifficultyControlPoint> sliderVelocities = new List<DifficultyControlPoint>(Beatmap.ControlPointInfo.DifficultyPoints);
@@ -41,33 +39,39 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             //Average BPM, this is getting returned
             double average = 0.0;
             int i = 0;
-
+            //This is to check if there are Objects before the first Green Line
             IEnumerable<HitObject> objectFix = Beatmap.HitObjects.Where(hit => hit.StartTime >= 0 && hit.StartTime < sliderVelocities[0].Time);
 
             if (objectFix.Any())
             {
+                //If yes, treat them as 1.0 Timing Points
                 int j = 0;
 
                 List<TimingControlPoint> fakeControlPoints =
                     new List<TimingControlPoint>(Beatmap.ControlPointInfo.TimingPoints.Where(point => point.Time >= 0 && point.Time < sliderVelocities[0].Time));//Beatmap.ControlPointInfo.TimingPoints.Where(point => point.Time >= 0 && point.Time < sliderVelocities[0].Time);
-
+                //Goes for each Fake Timing point as if it were a Green Line with 1.0 SV
                 foreach (TimingControlPoint point in fakeControlPoints)
                 {
+                    //If this ins't the last timing point
                     if (fakeControlPoints.Count != j + 1)
                     {
                         TimingControlPoint nextPoint = fakeControlPoints[i + 1];
                         double weighedSv = 0.0;
+                        //Gets how Many objects are affected by the Line
                         int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < nextPoint.Time).Count();
-
+                        //Calculates for 1.0 SV Timing point
                         weighedSv = Math.Min(point.BPM, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
+                        //Multiplies by Percentage of how many Objects are affected
                         weighedSv *= ((double)affectedObjects / (double)totalObjects);
-
+                        //Add to the total
                         average += weighedSv;
                         j++;
                     }
+                    //If it is the Last Timing Point
                     else
                     {
                         double weighedSv = 0.0;
+                        //Gets the Rest of the Objects starting from the Last timing point to the first Green Line
                         int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < sliderVelocities[0].Time).Count();
 
                         weighedSv = Math.Min(point.BPM, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
@@ -78,42 +82,53 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                     }
                 }
             }
-
+            //Go through all actual Slider Velocities
             foreach (DifficultyControlPoint point in sliderVelocities)
             {
+                //If this isn't the last Timing Point
                 if (sliderVelocities.Count != i + 1)
                 {
+                    //Get the Next timing point to get a span from where to get objects
                     DifficultyControlPoint nextPoint = sliderVelocities[i + 1];
                     double weighedSv = 0.0;
+                    //Calculate affected objects based on this timing points start time and the next timing points start time (This points end time)
                     int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < nextPoint.Time).Count();
-
+                    //Weighed Slider Velocity is always: BPM * Slider Velocity
                     weighedSv = Beatmap.ControlPointInfo.TimingPointAt(point.Time).BPM * point.SpeedMultiplier;
-
+                    //After that calculation we cap the Value at 700, this is to Prevent overuse of Ninja Notes
                     weighedSv = Math.Min(weighedSv, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
+                    //Multiplies by Percentage of how many Objects are affected
                     weighedSv *= ((double)affectedObjects / (double)totalObjects);
-
+#if DEBUG
+                    //Debug log
                     Console.WriteLine($"{i}: weighed: {weighedSv} | sv: {point.SpeedMultiplier} | objects affected: {affectedObjects}");
-
+#endif
+                    //Add to the average
                     average += weighedSv;
                     i++;
                 }
+                //If this is the last Timing Point
                 else
                 {
-                    double weighedSv = point.SpeedMultiplier;
-                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < 13298761328).Count();
-
+                    double weighedSv = 0.0;
+                    //Gets all Affected Objects from the Timing point until the very last Object in the Map
+                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < Beatmap.HitObjects[Beatmap.HitObjects.Count - 1] + 1).Count();
+                    //Weighed Slider Velocity is always: BPM * Slider Velocity
                     weighedSv = Beatmap.ControlPointInfo.TimingPointAt(point.Time).BPM * point.SpeedMultiplier;
-
+                    //After that calculation we cap the Value at 700, this is to Prevent overuse of Ninja Notes
                     weighedSv = Math.Min(weighedSv, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
+                    //Multiplies by Percentage of how many Objects are affected
                     weighedSv *= ((double)affectedObjects / (double)totalObjects);
-
+#if DEBUG
+                    //Debug log
                     Console.WriteLine($"{i}: weighed: {weighedSv} | sv: {point.SpeedMultiplier} | objects affected: {affectedObjects}");
-
+#endif
+                    //Add to the average
                     average += weighedSv;
                     i++;
                 }
             }
-            return average;
+            return average * (Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
         }
 
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null)
