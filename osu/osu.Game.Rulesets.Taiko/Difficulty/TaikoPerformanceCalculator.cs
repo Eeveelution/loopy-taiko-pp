@@ -59,9 +59,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                         double weighedSv = 0.0;
                         int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < nextPoint.Time).Count();
 
-                        weighedSv = point.BPM;
-
-                        weighedSv = Math.Min(weighedSv, 700 / SliderVelocityBaseBpm);
+                        weighedSv = Math.Min(point.BPM, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
                         weighedSv *= ((double)affectedObjects / (double)totalObjects);
 
                         average += weighedSv;
@@ -72,8 +70,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                         double weighedSv = 0.0;
                         int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < sliderVelocities[0].Time).Count();
 
-                        weighedSv = point.BPM;
-                        weighedSv = Math.Min(weighedSv, 700 / SliderVelocityBaseBpm);
+                        weighedSv = Math.Min(point.BPM, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
                         weighedSv *= ((double)affectedObjects / (double)totalObjects);
 
                         average += weighedSv;
@@ -92,7 +89,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
                     weighedSv = Beatmap.ControlPointInfo.TimingPointAt(point.Time).BPM * point.SpeedMultiplier;
 
-                    weighedSv = Math.Min(weighedSv, 700 / SliderVelocityBaseBpm);
+                    weighedSv = Math.Min(weighedSv, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
                     weighedSv *= ((double)affectedObjects / (double)totalObjects);
 
                     Console.WriteLine($"{i}: weighed: {weighedSv} | sv: {point.SpeedMultiplier} | objects affected: {affectedObjects}");
@@ -107,7 +104,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
                     weighedSv = Beatmap.ControlPointInfo.TimingPointAt(point.Time).BPM * point.SpeedMultiplier;
 
-                    weighedSv = Math.Min(weighedSv, 700 / SliderVelocityBaseBpm);
+                    weighedSv = Math.Min(weighedSv, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
                     weighedSv *= ((double)affectedObjects / (double)totalObjects);
 
                     Console.WriteLine($"{i}: weighed: {weighedSv} | sv: {point.SpeedMultiplier} | objects affected: {affectedObjects}");
