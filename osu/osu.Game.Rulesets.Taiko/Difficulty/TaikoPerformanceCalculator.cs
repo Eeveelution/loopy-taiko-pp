@@ -29,6 +29,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         {
         }
 
+        #region Speed Calculation
+
         private double GetAverageSVWeighed()
         {
             List<DifficultyControlPoint> sliderVelocities = new List<DifficultyControlPoint>(Beatmap.ControlPointInfo.DifficultyPoints);
@@ -131,10 +133,15 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             return average * (Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
         }
 
+        #endregion
+
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null)
         {
             //Gets Effective Average (BPM * Slider Velocty) for Scroll Speed Calcuation
             double average_sv = GetAverageSVWeighed();
+
+            Console.WriteLine("effective bpm: {0}", average_sv);
+
             //Sets mods to the current score's Mods
             mods = Score.Mods;
             //Length Bonus
@@ -148,16 +155,19 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             //Sets Multiplier for Nofail, Nofail Nerfs a score by 10%
             if (mods.Any(m => m is ModNoFail))
                 multiplier *= 0.9;
+
             //Sets Multiplier for Hidden, Hidden buffs a score by a straight 5%
             if (mods.Any(m => m is ModHidden))
                 multiplier *= 1.1;
+
             //Apply Multiplier for Easy which has the same 10% as Nofail, and adjust Overall Difficulty Values
             if (mods.Any(m => m is ModEasy))
             {
                 multiplier         *= 0.9;
                 overall_difficulty /= 2.0;
             }
-            //Hardrock gets a 7% buff and  changes OD right now
+
+            //Hardrock gets a 7% buff and changes OD
             if (mods.Any(m => m is ModHardRock))
             {
                 overall_difficulty =  Math.Min(overall_difficulty * 1.4, 10.0);
@@ -169,8 +179,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             //Double Time and Half Time both reduce/increase the hit window for 300 hits, this can be seen here
             if (mods.Any(m => m is ModDoubleTime))
                 hit_window *= 2.0 / 3.0;
+
             if (mods.Any(m => m is ModHalfTime))
                 hit_window *= 4.0 / 3.0;
+
             //Difficulty strain calculation
             double diffstrain = (((Math.Pow((470.0 * Attributes.StarRating - 7.0),3.0)) / 100000000.0)
                                 * ((base_length / 10.0) + 1.0)
@@ -179,11 +191,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                                 * Score.Accuracy)
                                 * (mods.Any(m => m is ModHidden) ? 1.025 : 1.0)
                                 * (mods.Any(m => m is ModFlashlight) ? 1.05 * ((base_length / 10) + 1) : 1.0);
+
             //Accuracy Strain Calculation
             double accstrain =  (Math.Pow((150 / hit_window), 1.1) + (34.5 - hit_window) / 15)
                 * Math.Pow(Score.Accuracy, 15)
                 * Math.Pow(base_length, 0.3)
                 * 3.75 * Math.Pow(Attributes.StarRating, 1.1);
+
             //Total Combined PP from Both
             double total_pp = Math.Pow(Math.Pow(diffstrain, 1.1) + Math.Pow(accstrain, 1.1), (1 / 1.1)) * multiplier;
 
