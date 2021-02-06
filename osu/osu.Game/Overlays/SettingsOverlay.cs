@@ -30,7 +30,7 @@ namespace osu.Game.Overlays
             new SkinSection(),
             new OnlineSection(),
             new MaintenanceSection(),
-            new DebugSection(),
+            //new DebugSection(),
         };
 
         private readonly List<SettingsSubPanel> subPanels = new List<SettingsSubPanel>();
