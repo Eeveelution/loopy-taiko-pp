@@ -33,6 +33,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         private double GetAverageSVWeighed()
         {
+            List<DifficultyControlPoint> sliderVelocities = new List<DifficultyControlPoint>(Beatmap.ControlPointInfo.DifficultyPoints);
+
             if (Beatmap.ControlPointInfo.DifficultyPoints.Count == 0) return 1.0;
             //Total Objects in the Map
             int totalObjects = Beatmap.HitObjects.Count;
@@ -60,10 +62,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                     int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < nextPoint.Time).Count();
 
                     weighedSv = ((double)affectedObjects / (double)totalObjects) * point.SpeedMultiplier;
+                    weighedSv *= Beatmap.ControlPointInfo.TimingPointAt(point.Time).BPM;
 
                     Console.WriteLine($"{i}: weighed: {weighedSv} | sv: {point.SpeedMultiplier} | objects affected: {affectedObjects}");
 
-                    average += weighedSv;
+                    average += Math.Min(weighedSv, 500);
                     i++;
                 }
                 else
@@ -72,61 +75,19 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                     int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < 13298761328).Count();
 
                     weighedSv = ((double)affectedObjects / (double)totalObjects) * point.SpeedMultiplier;
+                    weighedSv *= Beatmap.ControlPointInfo.TimingPointAt(point.Time).BPM;
 
                     Console.WriteLine($"{i}: weighed: {weighedSv} | sv: {point.SpeedMultiplier} | objects affected: {affectedObjects}");
 
-
-                    average += weighedSv;
+                    average += Math.Min(weighedSv, 500);
                     i++;
                 }
             }
             return average;
-        }
-
-
-        private double GetAverageBpmWeighed()
-        {
-            //Total Objects in the Map
-            int totalObjects = Beatmap.HitObjects.Count;
-            //Average BPM, this is getting returned
-            double average = 0.0;
-            int i = 0;
-
-            foreach (TimingControlPoint point in Beatmap.ControlPointInfo.TimingPoints)
-            {
-                if (Beatmap.ControlPointInfo.TimingPoints.Count != i + 1)
-                {
-                    TimingControlPoint nextPoint = Beatmap.ControlPointInfo.TimingPoints[i + 1];
-                    double weighedBpm = point.BPM;
-                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < nextPoint.Time).Count();
-
-                    weighedBpm = ((double)affectedObjects / (double)totalObjects) * point.BPM;
-
-                    average += weighedBpm;
-                    i++;
-                }
-                else
-                {
-                    double weighedBpm = point.BPM;
-                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < 13298761328).Count();
-
-                    weighedBpm = ((double)affectedObjects / (double)totalObjects) * point.BPM;
-
-                    average += weighedBpm;
-                    i++;
-                }
-            }
-            return average;
-        }
-
-        private double GetSliderVelocityDifficulty()
-        {
-            return 0.0;
         }
 
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null)
         {
-            double average_bpm = GetAverageBpmWeighed();
             double average_sv = GetAverageSVWeighed();
             //Sets mods to the current score's Mods
             mods = Score.Mods;
