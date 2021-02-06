@@ -35,34 +35,39 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         {
             List<DifficultyControlPoint> sliderVelocities = new List<DifficultyControlPoint>(Beatmap.ControlPointInfo.DifficultyPoints);
 
-            if (Beatmap.ControlPointInfo.DifficultyPoints.Count == 0) return 1.0;
+            if (sliderVelocities.Count == 0) return 1.0;
             //Total Objects in the Map
             int totalObjects = Beatmap.HitObjects.Count;
             //Average BPM, this is getting returned
             double average = 0.0;
             int i = 0;
 
-            if (Beatmap.HitObjects.Where(hit => hit.StartTime >= 0 && hit.StartTime < Beatmap.ControlPointInfo.DifficultyPoints[0].Time).Any())
+            IEnumerable<HitObject> objectFix = Beatmap.HitObjects.Where(hit => hit.StartTime >= 0 && hit.StartTime < sliderVelocities[0].Time);
+
+            if (objectFix.Any())
             {
-                double weighedSv = 1.0;
-                int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= 0 && hit.StartTime < Beatmap.ControlPointInfo.DifficultyPoints[0].Time).Count();
+                foreach (TimingControlPoint controlPoint in Beatmap.ControlPointInfo.TimingPoints.Where(point => point.Time >= 0 && point.Time < sliderVelocities[0].Time))
+                {
+                    DifficultyControlPoint point = new DifficultyControlPoint();
+                    point.Time = controlPoint.Time;
+                    point.SpeedMultiplier = 1.0;
 
-                weighedSv = ((double)affectedObjects / (double)totalObjects) * 1.0;
-
-                average += weighedSv;
+                    sliderVelocities.Add(point);
+                }
             }
 
-            foreach (DifficultyControlPoint point in Beatmap.ControlPointInfo.DifficultyPoints)
+            foreach (DifficultyControlPoint point in sliderVelocities)
             {
-
-                if (Beatmap.ControlPointInfo.DifficultyPoints.Count != i + 1)
+                if (sliderVelocities.Count != i + 1)
                 {
-                    DifficultyControlPoint nextPoint = Beatmap.ControlPointInfo.DifficultyPoints[i + 1];
+                    DifficultyControlPoint nextPoint = sliderVelocities[i + 1];
                     double weighedSv = point.SpeedMultiplier;
                     int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < nextPoint.Time).Count();
 
-                    weighedSv = ((double)affectedObjects / (double)totalObjects) * point.SpeedMultiplier;
-                    weighedSv *= Beatmap.ControlPointInfo.TimingPointAt(point.Time).BPM;
+                    weighedSv = Beatmap.ControlPointInfo.TimingPointAt(point.Time).BPM * point.SpeedMultiplier;
+
+                    weighedSv = Math.Min(weighedSv, 700 / SliderVelocityBaseBpm);
+                    weighedSv *= ((double)affectedObjects / (double)totalObjects);
 
                     Console.WriteLine($"{i}: weighed: {weighedSv} | sv: {point.SpeedMultiplier} | objects affected: {affectedObjects}");
 
@@ -74,8 +79,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                     double weighedSv = point.SpeedMultiplier;
                     int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < 13298761328).Count();
 
-                    weighedSv = ((double)affectedObjects / (double)totalObjects) * point.SpeedMultiplier;
-                    weighedSv *= Beatmap.ControlPointInfo.TimingPointAt(point.Time).BPM;
+                    weighedSv = Beatmap.ControlPointInfo.TimingPointAt(point.Time).BPM * point.SpeedMultiplier;
+
+                    weighedSv = Math.Min(weighedSv, 700 / SliderVelocityBaseBpm);
+                    weighedSv *= ((double)affectedObjects / (double)totalObjects);
 
                     Console.WriteLine($"{i}: weighed: {weighedSv} | sv: {point.SpeedMultiplier} | objects affected: {affectedObjects}");
 
