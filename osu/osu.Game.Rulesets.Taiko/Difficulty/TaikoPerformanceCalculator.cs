@@ -155,6 +155,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                     weighedSv = Math.Min(point.BPM, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
                     //Multiplies by Percentage of how many Objects are affected
                     weighedSv *= ((double)affectedObjects / (double)totalObjects);
+#if DEBUG
+                    Console.WriteLine($"{j}: weighed: {weighedSv} | bpm: {point.BPM} | objects affected: {affectedObjects}");
+#endif
                     //Add to the total
                     average += weighedSv;
                     j++;
@@ -168,6 +171,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
                     weighedSv = Math.Min(point.BPM, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
                     weighedSv *= ((double)affectedObjects / (double)totalObjects);
+
+#if DEBUG
+                    Console.WriteLine($"{j}: weighed: {weighedSv} | bpm: {point.BPM} | objects affected: {affectedObjects}");
+#endif
 
                     average += weighedSv;
                     j++;
