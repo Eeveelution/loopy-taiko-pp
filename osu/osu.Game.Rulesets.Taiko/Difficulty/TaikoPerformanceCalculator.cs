@@ -142,6 +142,16 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double average = 0.0;
             int j = 0;
 
+            IEnumerable<HitObject> objectFix = Beatmap.HitObjects.Where(hit => hit.StartTime >= 0 && hit.StartTime < Beatmap.ControlPointInfo.TimingPoints[0].Time);
+
+            if(objectFix.Any())
+            {
+                double weighedSv = Math.Min(Beatmap.ControlPointInfo.TimingPoints[0].BPM, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
+                weighedSv *= ((double)objectFix.Count() / (double)totalObjects);
+
+                average += weighedSv;
+            }
+
             foreach (TimingControlPoint point in Beatmap.ControlPointInfo.TimingPoints)
             {
                 //If this ins't the last timing point
