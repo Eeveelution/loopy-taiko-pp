@@ -132,7 +132,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             }
             return average * (Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
         }
-
+    
         private double GetAverageBpmWeighed()
         {
             if (Beatmap.ControlPointInfo.TimingPoints.Count == 1) return Beatmap.ControlPointInfo.TimingPoints[0].BPM * (Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
@@ -199,9 +199,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         {
             //Gets Effective Average (BPM * Slider Velocty) for Scroll Speed Calcuation
             double average_sv = GetAverageSVWeighed();
-
+#if DEBUG
             Console.WriteLine("effective bpm: {0}", average_sv);
-
+#endif
             //Sets mods to the current score's Mods
             mods = Score.Mods;
             //Length Bonus
