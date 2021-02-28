@@ -34,21 +34,56 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         private double GetAverageSVWeighed()
         {
             List<DifficultyControlPoint> sliderVelocities = new List<DifficultyControlPoint>(Beatmap.ControlPointInfo.DifficultyPoints);
+            //Iterator to keep track at what Timing point we're at
+            int k = 0;
+            //Iterate over every BPM Change (Part of a fix for apparition)
+            foreach (TimingControlPoint point in Beatmap.ControlPointInfo.TimingPoints)
+            {
+                //Check if it's the last Timing Point
+                if (this.Beatmap.ControlPointInfo.TimingPoints.Count != k - 1)
+                {
+                    //Get the Next Timing Point
+                    TimingControlPoint nextPoint = this.Beatmap.ControlPointInfo.TimingPoints[k + 1];
+                    //See if there are any Timing Points
+                    List<DifficultyControlPoint> controlPoints = this.Beatmap.ControlPointInfo.DifficultyPoints.Where(timingPoint => timingPoint.Time >= point.Time && timingPoint.Time < nextPoint.Time).ToList();
+                    //If there aren't any, add a 1.0 SV
+                    if (!controlPoints.Any())
+                    {
+                        DifficultyControlPoint controlPoint = new DifficultyControlPoint();
+                        controlPoint.SpeedMultiplier = 1.0;
+                        sliderVelocities.Add(controlPoint);
+                    }
+                    k++;
+                }
+                else
+                {
+                    //See if there are any Timing Points
+                    List<DifficultyControlPoint> controlPoints = this.Beatmap.ControlPointInfo.DifficultyPoints.Where(point => point.Time >= point.Time && point.Time < Beatmap.HitObjects[Beatmap.HitObjects.Count - 1].StartTime + 1).ToList();
+                    //If there aren't any, add a 1.0 SV
+                    if (!controlPoints.Any())
+                    {
+                        DifficultyControlPoint controlPoint = new DifficultyControlPoint();
+                        controlPoint.SpeedMultiplier = 1.0;
+                        sliderVelocities.Add(controlPoint);
+                    }
+                    k++;
+                }
+            }
 
             if (sliderVelocities.Count == 0) return 1.0;
             //Total Objects in the Map
             int totalObjects = Beatmap.HitObjects.Count;
             //Average BPM, this is getting returned
             double average = 0.0;
-            int i = 0;
+
             //This is to check if there are Objects before the first Green Line
             IEnumerable<HitObject> objectFix = Beatmap.HitObjects.Where(hit => hit.StartTime >= 0 && hit.StartTime < sliderVelocities[0].Time);
-
+            //If yes, treat them as 1.0 Timing Points
             if (objectFix.Any())
             {
-                //If yes, treat them as 1.0 Timing Points
+                //Iterator to keep track at what "fake" timing point we're at
                 int j = 0;
-
+                //Get a List of all Timing Points between the beginning of the map and the first Slider Velocity Change
                 List<TimingControlPoint> fakeControlPoints =
                     new List<TimingControlPoint>(Beatmap.ControlPointInfo.TimingPoints.Where(point => point.Time >= 0 && point.Time < sliderVelocities[0].Time));//Beatmap.ControlPointInfo.TimingPoints.Where(point => point.Time >= 0 && point.Time < sliderVelocities[0].Time);
                 //Goes for each Fake Timing point as if it were a Green Line with 1.0 SV
@@ -57,7 +92,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                     //If this ins't the last timing point
                     if (fakeControlPoints.Count != j + 1)
                     {
-                        TimingControlPoint nextPoint = fakeControlPoints[i + 1];
+                        TimingControlPoint nextPoint = fakeControlPoints[j + 1];
                         double weighedSv = 0.0;
                         //Gets how Many objects are affected by the Line
                         int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < nextPoint.Time).Count();
@@ -84,6 +119,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                     }
                 }
             }
+            //Iterator to keep track of which Timing Point we're at
+            int i = 0;
             //Go through all actual Slider Velocities
             foreach (DifficultyControlPoint point in sliderVelocities)
             {
@@ -200,6 +237,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             //Total Combined PP from Both
             double total_pp = Math.Pow(Math.Pow(diffstrain, 1.1) + Math.Pow(accstrain, 1.1), (1 / 1.1)) * multiplier;
+
+            //Add it to Category difficulty (not sure if required but I'd rather do it
+            categoryDifficulty.Add("Strain", diffstrain);
+            categoryDifficulty.Add("Accuracy", accstrain);
 
             return total_pp;
         }
