@@ -70,7 +70,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 }
             }
 
-            if (sliderVelocities.Count == 0) return 1.0;
+            if (sliderVelocities.Count == 0) return GetAverageBpmWeighed();
             //Total Objects in the Map
             int totalObjects = Beatmap.HitObjects.Count;
             //Average BPM, this is getting returned
@@ -169,6 +169,66 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             }
             return average * (Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
         }
+    
+        private double GetAverageBpmWeighed()
+        {
+            if (Beatmap.ControlPointInfo.TimingPoints.Count == 1) return Beatmap.ControlPointInfo.TimingPoints[0].BPM * (Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
+            //Total Objects in the Map
+            int totalObjects = Beatmap.HitObjects.Count;
+            //Average BPM, this is getting returned
+            double average = 0.0;
+            int j = 0;
+
+            IEnumerable<HitObject> objectFix = Beatmap.HitObjects.Where(hit => hit.StartTime >= 0 && hit.StartTime < Beatmap.ControlPointInfo.TimingPoints[0].Time);
+
+            if(objectFix.Any())
+            {
+                double weighedSv = Math.Min(Beatmap.ControlPointInfo.TimingPoints[0].BPM, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
+                weighedSv *= ((double)objectFix.Count() / (double)totalObjects);
+
+                average += weighedSv;
+            }
+
+            foreach (TimingControlPoint point in Beatmap.ControlPointInfo.TimingPoints)
+            {
+                //If this ins't the last timing point
+                if (Beatmap.ControlPointInfo.TimingPoints.Count != j + 1)
+                {
+                    TimingControlPoint nextPoint = Beatmap.ControlPointInfo.TimingPoints[j + 1];
+                    double weighedSv = 0.0;
+                    //Gets how Many objects are affected by the Line
+                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < nextPoint.Time).Count();
+                    //Calculates for 1.0 SV Timing point
+                    weighedSv = Math.Min(point.BPM, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
+                    //Multiplies by Percentage of how many Objects are affected
+                    weighedSv *= ((double)affectedObjects / (double)totalObjects);
+#if DEBUG
+                    Console.WriteLine($"{j}: weighed: {weighedSv} | bpm: {point.BPM} | objects affected: {affectedObjects}");
+#endif
+                    //Add to the total
+                    average += weighedSv;
+                    j++;
+                }
+                //If it is the Last Timing Point
+                else
+                {
+                    double weighedSv = 0.0;
+                    //Gets the Rest of the Objects starting from the Last timing point to the first Green Line
+                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < Beatmap.HitObjects[Beatmap.HitObjects.Count - 1].StartTime + 1).Count();
+
+                    weighedSv = Math.Min(point.BPM, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
+                    weighedSv *= ((double)affectedObjects / (double)totalObjects);
+
+#if DEBUG
+                    Console.WriteLine($"{j}: weighed: {weighedSv} | bpm: {point.BPM} | objects affected: {affectedObjects}");
+#endif
+
+                    average += weighedSv;
+                    j++;
+                }
+            }
+            return average * (Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
+        }
 
         #endregion
 
@@ -176,9 +236,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         {
             //Gets Effective Average (BPM * Slider Velocty) for Scroll Speed Calcuation
             double average_sv = GetAverageSVWeighed();
-
+#if DEBUG
             Console.WriteLine("effective bpm: {0}", average_sv);
-
+#endif
             //Sets mods to the current score's Mods
             mods = Score.Mods;
             //Length Bonus
