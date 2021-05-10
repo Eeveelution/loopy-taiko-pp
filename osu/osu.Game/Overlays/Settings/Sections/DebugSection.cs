@@ -3,7 +3,6 @@
 
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Sprites;
-using osu.Game.Overlays.Settings.Sections.Debug;
 
 namespace osu.Game.Overlays.Settings.Sections
 {
@@ -18,11 +17,6 @@ namespace osu.Game.Overlays.Settings.Sections
 
         public DebugSection()
         {
-            Children = new Drawable[]
-            {
-                new GeneralSettings(),
-                new MemorySettings(),
-            };
         }
     }
 }
