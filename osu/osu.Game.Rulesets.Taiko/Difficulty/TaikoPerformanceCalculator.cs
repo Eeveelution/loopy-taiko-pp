@@ -13,6 +13,7 @@ using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Objects;
 using osu.Game.Rulesets.Scoring;
 using osu.Game.Rulesets.Taiko.Difficulty.Skills;
+using osu.Game.Rulesets.Taiko.Mods;
 using osu.Game.Rulesets.Taiko.Objects;
 using osu.Game.Scoring;
 
@@ -115,10 +116,15 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             mods = Score.Mods;
             //Length Bonus
             double base_length = Math.Log((totalHits + 1500.0) / 1500.0, 2.0);
+            double length_bonus = (Math.Pow(base_length, 0.75) / 10.0) + 1.0;
 
-            double mod_multiplier_number = Math.Pow(1.05, (((mods.Any(m => m is ModHidden) ? 1 : 0)) + ((mods.Any(m => m is ModHardRock) ? 1 : 0))) *(Math.Pow(0.9, ((mods.Any(m => m is ModEasy) ? 1 : 0)))));
-            //Mod Multiplier
-            double multiplier = base_length * Math.Pow(1.05, mod_multiplier_number);
+            int modHardrock = (mods.Any(m => m is ModHardRock) ? 1 : 0);
+            int modHidden = (mods.Any(m => m is ModHidden) ? 1 : 0);
+            int modEasy = (mods.Any(m => m is ModEasy) ? 1 : 0);
+
+            double mod_multiplier_count = Math.Pow(1.05, modHardrock + modHidden) * Math.Pow(0.9, modEasy);
+            double multiplier = length_bonus * mod_multiplier_count;
+
             //Maps Overall Difficulty value, gets changed with the Easy, Half Time, Hard Rock and Double Time mods
             double overall_difficulty = Attributes.Beatmap.BeatmapInfo.BaseDifficulty.OverallDifficulty;
             //Hit window for 300 hits in milliseconds (Used because Attributes.GreatHitWindow is unreliable)
@@ -145,7 +151,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 hit_window *= 4.0 / 3.0;
 
             double diffstrain = (Math.Pow((23 * Attributes.StarRating), 3.0) / 12500.0);
-            diffstrain        *= (Math.Pow(base_length, 0.75) / 10.0) + 1.0;
+            diffstrain        *= length_bonus;
             diffstrain        *= Math.Pow((((double)totalHits - (double)Score.Statistics.GetOrDefault(HitResult.Miss)) / (double)totalHits), 10.0);
             diffstrain        *= Score.Accuracy;
             diffstrain        *= (mods.Any(m => m is ModFlashlight) ? ((Math.Pow(base_length, 0.75) / 10.0)) + 1.0 : 1.0);
@@ -160,7 +166,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                                * (mods.Any(m => m is ModHidden) ? 1.1 : 1.0);
 
             //Total Combined PP from Both
-            double total_pp = Math.Pow(Math.Pow(diffstrain, 1.1) + Math.Pow(accstrain, 1.1), (1 / 1.1)) * multiplier;
+            double total_pp = Math.Pow(Math.Pow(diffstrain, 1.1) + Math.Pow(accstrain, 1.1), (1 / 1.1)) * (mods.Any(m => m is ModFlashlight) ? multiplier : 1.0);
 
             //Add it to Category difficulty (not sure if required but I'd rather do it
             categoryDifficulty.Add("Strain", diffstrain);
