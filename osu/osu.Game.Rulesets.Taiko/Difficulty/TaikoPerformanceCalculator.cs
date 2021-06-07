@@ -66,6 +66,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             else                                                return 1.4;
         }
 
+
+
         #endregion
 
         private double GetAverage(double[] array) {
@@ -144,16 +146,51 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         #endregion
 
+
+
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null) {
+            //Sets mods to the current score's Mods
+            mods = Score.Mods;
             //Gets Effective Average (BPM * Slider Velocty) for Scroll Speed Calcuation
             double average_sv = this.GetEffectiveBpmAverage();
             double median_sv = this.GetEffectiveBpmMedian();
+
+            double sv_bonus = 1.0;
 #if DEBUG
             Console.WriteLine("effective bpm average: {0}", average_sv);
             Console.WriteLine("effective bpm median: {0}",  median_sv);
 #endif
-            //Sets mods to the current score's Mods
-            mods = Score.Mods;
+
+            #region Apply Curves to SV Bonus
+
+            if ( mods.Any(m => m is ModHidden)     &&
+                !mods.Any(m => m is ModHardRock)   &&
+                !mods.Any(m => m is ModFlashlight) &&
+                !mods.Any(m => m is ModEasy))
+                    sv_bonus = GetBonusHD(average_sv);
+
+            if ( mods.Any(m => m is ModHidden)      &&
+                 mods.Any(m => m is ModEasy)        &&
+                !mods.Any(m => m is ModFlashlight))
+                    sv_bonus = GetBonusEZHD(average_sv);
+
+            if ( mods.Any(m => m is ModHardRock)    &&
+                !mods.Any(m => m is ModHidden)      &&
+                !mods.Any(m => m is ModFlashlight))
+                    sv_bonus = GetBonusHR(average_sv);
+
+            if (mods.Any(m => m is ModEasy)         &&
+                !mods.Any(m => m is ModHidden)      &&
+                !mods.Any(m => m is ModFlashlight))
+                    sv_bonus = GetBonusEZ(average_sv);
+
+            if (mods.Any(m => m is ModHidden)      &&
+                mods.Any(m => m is ModHardRock)    &&
+                !mods.Any(m => m is ModFlashlight))
+                    sv_bonus = GetBonusHDHR(average_sv);
+
+            #endregion
+
             //Length Bonus
             double base_length = Math.Log((totalHits + 1500.0) / 1500.0, 2.0);
             double length_bonus = (Math.Pow(base_length, 0.75) / 10.0) + 1.0;
