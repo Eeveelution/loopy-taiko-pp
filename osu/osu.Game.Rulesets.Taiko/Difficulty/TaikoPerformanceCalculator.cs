@@ -29,205 +29,75 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         {
         }
 
-        #region Speed Calculation
+        private double GetAverage(double[] array) {
+            double result = 0.0;
 
-        private double GetAverageSVWeighed()
-        {
-            List<DifficultyControlPoint> sliderVelocities = new List<DifficultyControlPoint>(Beatmap.ControlPointInfo.DifficultyPoints);
-            //Iterator to keep track at what Timing point we're at
-            int k = 0;
-            //Iterate over every BPM Change (Part of a fix for apparition)
-            foreach (TimingControlPoint point in Beatmap.ControlPointInfo.TimingPoints)
+            foreach (double d in array)
             {
-                //Check if it's the last Timing Point
-                if (this.Beatmap.ControlPointInfo.TimingPoints.Count != k - 1)
-                {
-                    //Get the Next Timing Point
-                    TimingControlPoint nextPoint = this.Beatmap.ControlPointInfo.TimingPoints[k + 1];
-                    //See if there are any Timing Points
-                    List<DifficultyControlPoint> controlPoints = this.Beatmap.ControlPointInfo.DifficultyPoints.Where(timingPoint => timingPoint.Time >= point.Time && timingPoint.Time < nextPoint.Time).ToList();
-                    //If there aren't any, add a 1.0 SV
-                    if (!controlPoints.Any())
-                    {
-                        DifficultyControlPoint controlPoint = new DifficultyControlPoint();
-                        controlPoint.SpeedMultiplier = 1.0;
-                        sliderVelocities.Add(controlPoint);
-                    }
-                    k++;
-                }
-                else
-                {
-                    //See if there are any Timing Points
-                    List<DifficultyControlPoint> controlPoints = this.Beatmap.ControlPointInfo.DifficultyPoints.Where(point => point.Time >= point.Time && point.Time < Beatmap.HitObjects[Beatmap.HitObjects.Count - 1].StartTime + 1).ToList();
-                    //If there aren't any, add a 1.0 SV
-                    if (!controlPoints.Any())
-                    {
-                        DifficultyControlPoint controlPoint = new DifficultyControlPoint();
-                        controlPoint.SpeedMultiplier = 1.0;
-                        sliderVelocities.Add(controlPoint);
-                    }
-                    k++;
-                }
+                result += d;
             }
 
-            if (sliderVelocities.Count == 0) return GetAverageBpmWeighed();
-            //Total Objects in the Map
-            int totalObjects = Beatmap.HitObjects.Count;
-            //Average BPM, this is getting returned
-            double average = 0.0;
-
-            //This is to check if there are Objects before the first Green Line
-            IEnumerable<HitObject> objectFix = Beatmap.HitObjects.Where(hit => hit.StartTime >= 0 && hit.StartTime < sliderVelocities[0].Time);
-            //If yes, treat them as 1.0 Timing Points
-            if (objectFix.Any())
-            {
-                //Iterator to keep track at what "fake" timing point we're at
-                int j = 0;
-                //Get a List of all Timing Points between the beginning of the map and the first Slider Velocity Change
-                List<TimingControlPoint> fakeControlPoints =
-                    new List<TimingControlPoint>(Beatmap.ControlPointInfo.TimingPoints.Where(point => point.Time >= 0 && point.Time < sliderVelocities[0].Time));//Beatmap.ControlPointInfo.TimingPoints.Where(point => point.Time >= 0 && point.Time < sliderVelocities[0].Time);
-                //Goes for each Fake Timing point as if it were a Green Line with 1.0 SV
-                foreach (TimingControlPoint point in fakeControlPoints)
-                {
-                    //If this ins't the last timing point
-                    if (fakeControlPoints.Count != j + 1)
-                    {
-                        TimingControlPoint nextPoint = fakeControlPoints[j + 1];
-                        double weighedSv = 0.0;
-                        //Gets how Many objects are affected by the Line
-                        int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < nextPoint.Time).Count();
-                        //Calculates for 1.0 SV Timing point
-                        weighedSv = Math.Min(point.BPM, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
-                        //Multiplies by Percentage of how many Objects are affected
-                        weighedSv *= ((double)affectedObjects / (double)totalObjects);
-                        //Add to the total
-                        average += weighedSv;
-                        j++;
-                    }
-                    //If it is the Last Timing Point
-                    else
-                    {
-                        double weighedSv = 0.0;
-                        //Gets the Rest of the Objects starting from the Last timing point to the first Green Line
-                        int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < sliderVelocities[0].Time).Count();
-
-                        weighedSv = Math.Min(point.BPM, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
-                        weighedSv *= ((double)affectedObjects / (double)totalObjects);
-
-                        average += weighedSv;
-                        j++;
-                    }
-                }
-            }
-            //Iterator to keep track of which Timing Point we're at
-            int i = 0;
-            //Go through all actual Slider Velocities
-            foreach (DifficultyControlPoint point in sliderVelocities)
-            {
-                //If this isn't the last Timing Point
-                if (sliderVelocities.Count != i + 1)
-                {
-                    //Get the Next timing point to get a span from where to get objects
-                    DifficultyControlPoint nextPoint = sliderVelocities[i + 1];
-                    double weighedSv = 0.0;
-                    //Calculate affected objects based on this timing points start time and the next timing points start time (This points end time)
-                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < nextPoint.Time).Count();
-                    //Weighed Slider Velocity is always: BPM * Slider Velocity
-                    weighedSv = Beatmap.ControlPointInfo.TimingPointAt(point.Time).BPM * point.SpeedMultiplier;
-                    //After that calculation we cap the Value at 700, this is to Prevent overuse of Ninja Notes
-                    weighedSv = Math.Min(weighedSv, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
-                    //Multiplies by Percentage of how many Objects are affected
-                    weighedSv *= ((double)affectedObjects / (double)totalObjects);
-#if DEBUG
-                    //Debug log
-                    Console.WriteLine($"{i}: weighed: {weighedSv} | sv: {point.SpeedMultiplier} | objects affected: {affectedObjects}");
-#endif
-                    //Add to the average
-                    average += weighedSv;
-                    i++;
-                }
-                //If this is the last Timing Point
-                else
-                {
-                    double weighedSv = 0.0;
-                    //Gets all Affected Objects from the Timing point until the very last Object in the Map
-                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < Beatmap.HitObjects[Beatmap.HitObjects.Count - 1].StartTime + 1).Count();
-                    //Weighed Slider Velocity is always: BPM * Slider Velocity
-                    weighedSv = Beatmap.ControlPointInfo.TimingPointAt(point.Time).BPM * point.SpeedMultiplier;
-                    //After that calculation we cap the Value at 700, this is to Prevent overuse of Ninja Notes
-                    weighedSv = Math.Min(weighedSv, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
-                    //Multiplies by Percentage of how many Objects are affected
-                    weighedSv *= ((double)affectedObjects / (double)totalObjects);
-#if DEBUG
-                    //Debug log
-                    Console.WriteLine($"{i}: weighed: {weighedSv} | sv: {point.SpeedMultiplier} | objects affected: {affectedObjects}");
-#endif
-                    //Add to the average
-                    average += weighedSv;
-                    i++;
-                }
-            }
-            return average * (Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
+            return result / (double) array.Length;
         }
-    
-        private double GetAverageBpmWeighed()
+
+        
+        private double GetMedian(double[] array)
         {
-            if (Beatmap.ControlPointInfo.TimingPoints.Count == 1) return Beatmap.ControlPointInfo.TimingPoints[0].BPM * (Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
-            //Total Objects in the Map
-            int totalObjects = Beatmap.HitObjects.Count;
-            //Average BPM, this is getting returned
-            double average = 0.0;
-            int j = 0;
+            double[] tempArray = array;
+            int count = tempArray.Length;
 
-            IEnumerable<HitObject> objectFix = Beatmap.HitObjects.Where(hit => hit.StartTime >= 0 && hit.StartTime < Beatmap.ControlPointInfo.TimingPoints[0].Time);
+            Array.Sort(tempArray);
 
-            if(objectFix.Any())
+            double medianValue = 0;
+
+            if (count % 2 == 0)
             {
-                double weighedSv = Math.Min(Beatmap.ControlPointInfo.TimingPoints[0].BPM, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
-                weighedSv *= ((double)objectFix.Count() / (double)totalObjects);
-
-                average += weighedSv;
+                // count is even, need to get the middle two elements, add them together, then divide by 2
+                double middleElement1 = tempArray[(count / 2) - 1];
+                double middleElement2 = tempArray[(count / 2)];
+                medianValue = (middleElement1 + middleElement2) / 2;
+            }
+            else
+            {
+                // count is odd, simply get the middle element.
+                medianValue = tempArray[(count / 2)];
             }
 
-            foreach (TimingControlPoint point in Beatmap.ControlPointInfo.TimingPoints)
+            return medianValue;
+        }
+
+        #region SV Bonus Calculation
+
+        private double GetEffectiveBpmAverage() {
+            List<double> results = new List<double>();
+
+            foreach (HitObject hitObject in Beatmap.HitObjects)
             {
-                //If this ins't the last timing point
-                if (Beatmap.ControlPointInfo.TimingPoints.Count != j + 1)
-                {
-                    TimingControlPoint nextPoint = Beatmap.ControlPointInfo.TimingPoints[j + 1];
-                    double weighedSv = 0.0;
-                    //Gets how Many objects are affected by the Line
-                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < nextPoint.Time).Count();
-                    //Calculates for 1.0 SV Timing point
-                    weighedSv = Math.Min(point.BPM, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
-                    //Multiplies by Percentage of how many Objects are affected
-                    weighedSv *= ((double)affectedObjects / (double)totalObjects);
-#if DEBUG
-                    Console.WriteLine($"{j}: weighed: {weighedSv} | bpm: {point.BPM} | objects affected: {affectedObjects}");
-#endif
-                    //Add to the total
-                    average += weighedSv;
-                    j++;
-                }
-                //If it is the Last Timing Point
-                else
-                {
-                    double weighedSv = 0.0;
-                    //Gets the Rest of the Objects starting from the Last timing point to the first Green Line
-                    int affectedObjects = Beatmap.HitObjects.Where(hit => hit.StartTime >= point.Time && hit.StartTime < Beatmap.HitObjects[Beatmap.HitObjects.Count - 1].StartTime + 1).Count();
+                double sv = this.Beatmap.ControlPointInfo.DifficultyPointAt(hitObject.StartTime).SpeedMultiplier;
+                double bpm = this.Beatmap.ControlPointInfo.TimingPointAt(hitObject.StartTime).BPM;
 
-                    weighedSv = Math.Min(point.BPM, 700 / Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier);
-                    weighedSv *= ((double)affectedObjects / (double)totalObjects);
+                double weighed = Math.Min(700 / this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier, bpm * sv);
 
-#if DEBUG
-                    Console.WriteLine($"{j}: weighed: {weighedSv} | bpm: {point.BPM} | objects affected: {affectedObjects}");
-#endif
-
-                    average += weighedSv;
-                    j++;
-                }
+                results.Add(weighed);
             }
-            return average * (Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
+
+            return this.GetAverage(results.ToArray());
+        }
+
+        private double GetEffectiveBpmMedian() {
+            List<double> results = new List<double>();
+
+            foreach (HitObject hitObject in Beatmap.HitObjects)
+            {
+                double sv = this.Beatmap.ControlPointInfo.DifficultyPointAt(hitObject.StartTime).SpeedMultiplier;
+                double bpm = this.Beatmap.ControlPointInfo.TimingPointAt(hitObject.StartTime).BPM;
+
+                double weighed = Math.Min(700 / this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier, bpm * sv);
+
+                results.Add(weighed);
+            }
+
+            return this.GetMedian(results.ToArray());
         }
 
         #endregion
@@ -235,9 +105,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null)
         {
             //Gets Effective Average (BPM * Slider Velocty) for Scroll Speed Calcuation
-            double average_sv = GetAverageSVWeighed();
+            double average_sv = this.GetEffectiveBpmAverage();
+            double median_sv = this.GetEffectiveBpmMedian();
 #if DEBUG
-            Console.WriteLine("effective bpm: {0}", average_sv);
+            Console.WriteLine("effective bpm average: {0}", average_sv);
+            Console.WriteLine("effective bpm median: {0}",  median_sv);
 #endif
             //Sets mods to the current score's Mods
             mods = Score.Mods;
