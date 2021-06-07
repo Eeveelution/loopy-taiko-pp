@@ -236,11 +236,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 hit_window *= 4.0 / 3.0;
 
             double diffstrain = (Math.Pow((23 * Attributes.StarRating), 3.0) / 12500.0);
-            diffstrain        *= length_bonus;
-            diffstrain        *= Math.Pow((((double)totalHits - (double)Score.Statistics.GetOrDefault(HitResult.Miss)) / (double)totalHits), 10.0);
-            diffstrain        *= Score.Accuracy;
-            diffstrain        *= (mods.Any(m => m is ModFlashlight) ? length_bonus * 1.1 : 1.0);
-            diffstrain        *= sv_bonus;
+            diffstrain *= length_bonus;
+            diffstrain *= Math.Pow(((totalHits - (double)Score.Statistics.GetOrDefault(HitResult.Miss)) / totalHits), (3 * (double)Score.Statistics.GetOrDefault(HitResult.Miss)));
+            diffstrain *= Score.Accuracy;
+            diffstrain *= (mods.Any(m => m is ModFlashlight) ? length_bonus * 1.1 : 1.0);
+            diffstrain *= sv_bonus;
 
             //Accuracy Strain Calculation
 
