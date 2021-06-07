@@ -40,9 +40,17 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         }
 
         private double GetBonusEZHD(double effectiveBpm) {
-            if      (effectiveBpm >= 0.0 && effectiveBpm < 200) { return 1.4 - (Math.Pow(effectiveBpm,         2) / 100000.0); }
-            else if (effectiveBpm >= 200 && effectiveBpm < 300) { return 0.8 + (Math.Pow((effectiveBpm - 300), 2) / 50000.0);  }
-            else                                                { return 0.8; }
+            if      (effectiveBpm >= 0.0   && effectiveBpm < 200.0) { return 1.4 - (Math.Pow(effectiveBpm,           2.0) / 100000.0); }
+            else if (effectiveBpm >= 200.0 && effectiveBpm < 300.0) { return 0.8 + (Math.Pow((effectiveBpm - 300.0), 2.0) / 50000.0);  }
+            else                                                    { return 0.8; }
+        }
+
+        private double GetBonusHD(double effectiveBpm) {
+            if      (effectiveBpm >= 0.0 && effectiveBpm < 180) { return 1.4 - (Math.Pow(effectiveBpm, 2.0) / 126000.0); }
+            else if (effectiveBpm >= 180 && effectiveBpm < 210) { return 1.1 + ( (Math.Pow(effectiveBpm - 210, 2.0) / 21000.0) );}
+            else if (effectiveBpm >= 210 && effectiveBpm < 240) { return 1.1 + ( (Math.Pow(effectiveBpm - 210, 2.0) / 24000.0) );}
+            else if (effectiveBpm >= 240 && effectiveBpm < 330) { return 1.25 - ((Math.Pow(effectiveBpm - 330, 2.0) / 72000.0)); }
+            else                                                { return 1.25; }
         }
 
         #endregion
@@ -124,10 +132,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         #endregion
 
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null) {
-            double Test1 = GetBonusEZHD(60);
-            double Test2 = GetBonusEZHD(175);
-            double Test3 = GetBonusEZHD(260);
-            double Test4 = GetBonusEZHD(400);
+            double Test1 = GetBonusHD(60);
+            double Test2 = GetBonusHD(175);
+            double Test3 = GetBonusHD(260);
+            double Test4 = GetBonusHD(400);
 
             //Gets Effective Average (BPM * Slider Velocty) for Scroll Speed Calcuation
             double average_sv = this.GetEffectiveBpmAverage();
