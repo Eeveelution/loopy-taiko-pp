@@ -163,6 +163,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             #region Apply Curves to SV Bonus
 
+            if (mods.Any(m => m is ModDoubleTime))
+                average_sv *= 1.5;
+
+            if (mods.Any(m => m is ModHalfTime))
+                average_sv *= 0.75;
+
             if ( mods.Any(m => m is ModHidden)     &&
                 !mods.Any(m => m is ModHardRock)   &&
                 !mods.Any(m => m is ModFlashlight) &&
@@ -189,11 +195,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 !mods.Any(m => m is ModFlashlight))
                     sv_bonus = GetBonusHDHR(average_sv);
 
-            if (mods.Any(m => m is ModDoubleTime))
-                sv_bonus *= 1.5;
 
-            if (mods.Any(m => m is ModHalfTime))
-                sv_bonus *= 0.75;
 
             #endregion
 
