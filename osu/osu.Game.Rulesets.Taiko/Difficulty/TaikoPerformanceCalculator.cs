@@ -232,10 +232,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             diffstrain        *= Math.Pow((((double)totalHits - (double)Score.Statistics.GetOrDefault(HitResult.Miss)) / (double)totalHits), 10.0);
             diffstrain        *= Score.Accuracy;
             diffstrain        *= (mods.Any(m => m is ModFlashlight) ? length_bonus * 1.1 : 1.0);
+            diffstrain        *= sv_bonus;
 
-                         //* effectiveBpmResultThing
+            //Accuracy Strain Calculation
 
-                         //Accuracy Strain Calculation
+            //the formatting is inconsistent becuase for some reason doing the exact same thing on diff strain made different results somehow? idk why but ill leave it like that for now
             double accstrain = (3.75 * Math.Pow(Attributes.StarRating, 1.1))
                                * Math.Pow((230 / hit_window), 0.85)
                                * Math.Pow(Score.Accuracy, 20)
