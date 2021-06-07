@@ -145,11 +145,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         #endregion
 
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null) {
-            double Test1 = GetBonusHDHR(60);
-            double Test2 = GetBonusHDHR(175);
-            double Test3 = GetBonusHDHR(260);
-            double Test4 = GetBonusHDHR(400);
-
             //Gets Effective Average (BPM * Slider Velocty) for Scroll Speed Calcuation
             double average_sv = this.GetEffectiveBpmAverage();
             double median_sv = this.GetEffectiveBpmMedian();
