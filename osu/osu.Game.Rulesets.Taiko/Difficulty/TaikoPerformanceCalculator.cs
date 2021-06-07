@@ -255,8 +255,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double total_pp = Math.Pow(Math.Pow(diffstrain, 1.1) + Math.Pow(accstrain, 1.1), (1 / 1.1)) * (mods.Any(m => m is ModFlashlight) ? multiplier : 1.0);
 
             //Add it to Category difficulty (not sure if required but I'd rather do it
-            categoryDifficulty.Add("Strain", diffstrain);
-            categoryDifficulty.Add("Accuracy", accstrain);
+            categoryDifficulty?.Add("Strain", diffstrain);
+            categoryDifficulty?.Add("Accuracy", accstrain);
 
             return total_pp;
         }
