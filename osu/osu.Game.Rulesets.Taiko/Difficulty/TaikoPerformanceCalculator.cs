@@ -55,7 +55,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 // count is even, need to get the middle two elements, add them together, then divide by 2
                 double middleElement1 = tempArray[(count / 2) - 1];
                 double middleElement2 = tempArray[(count / 2)];
-                medianValue = (middleElement1 + middleElement2) / 2;
+                medianValue = (middleElement1 + middleElement2) / 2.0;
             }
             else
             {
@@ -76,12 +76,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 double sv = this.Beatmap.ControlPointInfo.DifficultyPointAt(hitObject.StartTime).SpeedMultiplier;
                 double bpm = this.Beatmap.ControlPointInfo.TimingPointAt(hitObject.StartTime).BPM;
 
-                double weighed = Math.Min(700 / this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier, bpm * sv);
+                double weighed = Math.Min(700.0 / this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier, bpm * sv);
 
                 results.Add(weighed);
             }
 
-            return this.GetAverage(results.ToArray());
+            return this.GetAverage(results.ToArray()) * (this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
         }
 
         private double GetEffectiveBpmMedian() {
@@ -92,12 +92,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 double sv = this.Beatmap.ControlPointInfo.DifficultyPointAt(hitObject.StartTime).SpeedMultiplier;
                 double bpm = this.Beatmap.ControlPointInfo.TimingPointAt(hitObject.StartTime).BPM;
 
-                double weighed = Math.Min(700 / this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier, bpm * sv);
+                double weighed = Math.Min(700.0 / this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier, bpm * sv);
 
                 results.Add(weighed);
             }
 
-            return this.GetMedian(results.ToArray());
+            return this.GetMedian(results.ToArray()) * (this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
         }
 
         #endregion
@@ -114,33 +114,25 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             //Sets mods to the current score's Mods
             mods = Score.Mods;
             //Length Bonus
-            double base_length = Math.Log((totalHits + 1500.0) / 1500.0, 2.0) /*/ 10.0 + 1.0*/;
+            double base_length = Math.Log((totalHits + 1500.0) / 1500.0, 2.0);
+
+            double mod_multiplier_number = Math.Pow(1.05, (((mods.Any(m => m is ModHidden) ? 1 : 0)) + ((mods.Any(m => m is ModHardRock) ? 1 : 0))) *(Math.Pow(0.9, ((mods.Any(m => m is ModEasy) ? 1 : 0)))));
             //Mod Multiplier
-            double multiplier = 1.0;
+            double multiplier = base_length * Math.Pow(1.05, mod_multiplier_number);
             //Maps Overall Difficulty value, gets changed with the Easy, Half Time, Hard Rock and Double Time mods
             double overall_difficulty = Attributes.Beatmap.BeatmapInfo.BaseDifficulty.OverallDifficulty;
             //Hit window for 300 hits in milliseconds (Used because Attributes.GreatHitWindow is unreliable)
             double hit_window;
-            //Sets Multiplier for Nofail, Nofail Nerfs a score by 10%
-            if (mods.Any(m => m is ModNoFail))
-                multiplier *= 0.9;
 
-            //Sets Multiplier for Hidden, Hidden buffs a score by a straight 5%
-            if (mods.Any(m => m is ModHidden))
-                multiplier *= 1.1;
-
-            //Apply Multiplier for Easy which has the same 10% as Nofail, and adjust Overall Difficulty Values
+            //adjust Overall Difficulty Values
             if (mods.Any(m => m is ModEasy))
             {
-                multiplier         *= 0.9;
                 overall_difficulty /= 2.0;
             }
-
-            //Hardrock gets a 7% buff and changes OD
+            //changes OD
             if (mods.Any(m => m is ModHardRock))
             {
-                overall_difficulty =  Math.Min(overall_difficulty * 1.4, 10.0);
-                multiplier         *= 1.07;
+                overall_difficulty = Math.Min(overall_difficulty * 1.4, 10.0);
             }
             //Calculate Hit window for 300 hits
             hit_window = Math.Floor(-3 * overall_difficulty) + 49.5;
@@ -152,20 +144,19 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             if (mods.Any(m => m is ModHalfTime))
                 hit_window *= 4.0 / 3.0;
 
-            //Difficulty strain calculation
-            double diffstrain = (((Math.Pow((470.0 * Attributes.StarRating - 7.0),3.0)) / 100000000.0)
-                                * ((base_length / 10.0) + 1.0)
-                                * Math.Sqrt(((double)totalHits - (double)Score.Statistics.GetOrDefault(HitResult.Miss)) / (double)totalHits)
-                                * Math.Pow(0.985 , (double)Score.Statistics.GetOrDefault(HitResult.Miss))
-                                * Score.Accuracy)
-                                * (mods.Any(m => m is ModHidden) ? 1.025 : 1.0)
-                                * (mods.Any(m => m is ModFlashlight) ? 1.05 * ((base_length / 10) + 1) : 1.0);
+            double diffstrain = Math.Pow((23 * Attributes.StarRating), 3 / 12500)
+                                * Math.Pow(base_length, 0.75) / 11
+                                * Math.Pow((((double)totalHits - (double)Score.Statistics.GetOrDefault(HitResult.Miss)) / (double)totalHits), 10)
+                                * Score.Accuracy
+                                * (mods.Any(m => m is ModFlashlight) ? 1.1 : 1.0);
+                         //* effectiveBpmResultThing
 
-            //Accuracy Strain Calculation
-            double accstrain =  (Math.Pow((150 / hit_window), 1.1) + (34.5 - hit_window) / 15)
-                * Math.Pow(Score.Accuracy, 15)
-                * Math.Pow(base_length, 0.3)
-                * 3.75 * Math.Pow(Attributes.StarRating, 1.1);
+                         //Accuracy Strain Calculation
+            double accstrain = (3.75 * Math.Pow(Attributes.StarRating, 1.1))
+                               * Math.Pow((230 / hit_window), 0.85)
+                               * Math.Pow(Score.Accuracy, 20)
+                               * Math.Pow(base_length, 1.1)
+                               * (mods.Any(m => m is ModHidden) ? 1.1 : 1.0);
 
             //Total Combined PP from Both
             double total_pp = Math.Pow(Math.Pow(diffstrain, 1.1) + Math.Pow(accstrain, 1.1), (1 / 1.1)) * multiplier;
