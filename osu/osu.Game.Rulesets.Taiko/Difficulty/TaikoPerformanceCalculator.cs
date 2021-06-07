@@ -144,18 +144,19 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             if (mods.Any(m => m is ModHalfTime))
                 hit_window *= 4.0 / 3.0;
 
-            double diffstrain = Math.Pow((23 * Attributes.StarRating), 3 / 12500)
-                                * Math.Pow(base_length, 0.75) / 11
-                                * Math.Pow((((double)totalHits - (double)Score.Statistics.GetOrDefault(HitResult.Miss)) / (double)totalHits), 10)
-                                * Score.Accuracy
-                                * (mods.Any(m => m is ModFlashlight) ? 1.1 : 1.0);
+            double diffstrain = (Math.Pow((23 * Attributes.StarRating), 3.0) / 12500.0);
+            diffstrain        *= (Math.Pow(base_length, 0.75) / 10.0) + 1.0;
+            diffstrain        *= Math.Pow((((double)totalHits - (double)Score.Statistics.GetOrDefault(HitResult.Miss)) / (double)totalHits), 10.0);
+            diffstrain        *= Score.Accuracy;
+            diffstrain        *= (mods.Any(m => m is ModFlashlight) ? ((Math.Pow(base_length, 0.75) / 10.0)) + 1.0 : 1.0);
+
                          //* effectiveBpmResultThing
 
                          //Accuracy Strain Calculation
             double accstrain = (3.75 * Math.Pow(Attributes.StarRating, 1.1))
                                * Math.Pow((230 / hit_window), 0.85)
                                * Math.Pow(Score.Accuracy, 20)
-                               * Math.Pow(base_length, 1.1)
+                               * Math.Pow(base_length, 0.3)
                                * (mods.Any(m => m is ModHidden) ? 1.1 : 1.0);
 
             //Total Combined PP from Both
