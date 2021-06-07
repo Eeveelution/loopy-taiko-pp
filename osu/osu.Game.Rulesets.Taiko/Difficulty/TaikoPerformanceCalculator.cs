@@ -56,7 +56,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         private double GetBonusHR(double effectiveBpm) {
             if      (effectiveBpm >= 0.0 && effectiveBpm < 180) return 0.8 + (Math.Pow(effectiveBpm - 90,  2.0) / 40500.0);
             else if (effectiveBpm >= 180 && effectiveBpm < 315) return 1.3 - (Math.Pow(effectiveBpm - 315, 2)   / 60750);
-            else                                                return 315;
+            else                                                return 1.3;
         }
 
         private double GetBonusHDHR(double effectiveBpm) {
