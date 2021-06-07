@@ -30,6 +30,28 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         {
         }
 
+        #region Graphs
+
+        private double GetBonusEZ(double effectiveBpm) {
+            if (effectiveBpm >= 0.0 && effectiveBpm < 160)
+            {
+                return 1.1 - (Math.Pow(effectiveBpm - 80, 2) / 64000);
+            }
+
+            else if (effectiveBpm >= 160 && effectiveBpm < 360)
+            {
+                return 0.75 + (Math.Pow(effectiveBpm - 360, 2) / 160000);
+            }
+
+            else
+            {
+                return 0.75;
+            }
+
+        }
+
+        #endregion
+
         private double GetAverage(double[] array) {
             double result = 0.0;
 
@@ -84,7 +106,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             return this.GetAverage(results.ToArray()) * (this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
         }
-
+        /// <summary>
+        /// For potentially switching to median.
+        /// </summary>
+        /// <returns></returns>
         private double GetEffectiveBpmMedian() {
             List<double> results = new List<double>();
 
@@ -103,8 +128,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         #endregion
 
-        public override double Calculate(Dictionary<string, double> categoryDifficulty = null)
-        {
+        public override double Calculate(Dictionary<string, double> categoryDifficulty = null) {
+            double Test1 = GetBonusEZ(60);
+            double Test2 = GetBonusEZ(175);
+            double Test3 = GetBonusEZ(260);
+            double Test4 = GetBonusEZ(400);
+
             //Gets Effective Average (BPM * Slider Velocty) for Scroll Speed Calcuation
             double average_sv = this.GetEffectiveBpmAverage();
             double median_sv = this.GetEffectiveBpmMedian();
