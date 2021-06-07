@@ -59,6 +59,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             else                                                return 315;
         }
 
+        private double GetBonusHDHR(double effectiveBpm) {
+            if      (effectiveBpm >= 0.0 && effectiveBpm < 120) return 1.4 - (Math.Pow(effectiveBpm,       2.0) / 60000.0);
+            else if (effectiveBpm >= 120 && effectiveBpm < 180) return 1.1 + (Math.Pow(effectiveBpm - 150, 2)   / 15000.0);
+            else if (effectiveBpm >= 180 && effectiveBpm < 300) return 1.4 - (Math.Pow(effectiveBpm - 300, 2)   / 60000.0);
+            else                                                return 1.4;
+        }
+
         #endregion
 
         private double GetAverage(double[] array) {
@@ -138,10 +145,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         #endregion
 
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null) {
-            double Test1 = GetBonusHR(60);
-            double Test2 = GetBonusHR(175);
-            double Test3 = GetBonusHR(260);
-            double Test4 = GetBonusHR(400);
+            double Test1 = GetBonusHDHR(60);
+            double Test2 = GetBonusHDHR(175);
+            double Test3 = GetBonusHDHR(260);
+            double Test4 = GetBonusHDHR(400);
 
             //Gets Effective Average (BPM * Slider Velocty) for Scroll Speed Calcuation
             double average_sv = this.GetEffectiveBpmAverage();
