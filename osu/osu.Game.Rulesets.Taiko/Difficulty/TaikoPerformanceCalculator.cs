@@ -189,6 +189,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 !mods.Any(m => m is ModFlashlight))
                     sv_bonus = GetBonusHDHR(average_sv);
 
+            if (mods.Any(m => m is ModDoubleTime))
+                sv_bonus *= 1.5;
+
+            if (mods.Any(m => m is ModHalfTime))
+                sv_bonus *= 0.75;
+
             #endregion
 
             //Length Bonus
