@@ -235,7 +235,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             if (mods.Any(m => m is ModHalfTime))
                 hit_window *= 4.0 / 3.0;
 
-            double diffstrain = (Math.Pow((23 * Attributes.StarRating), 3.0) / 12500.0);
+            double diffstrain = (Math.Pow(4.25 * Attributes.StarRating, 3) / 100);
             diffstrain *= length_bonus;
             diffstrain *= Math.Pow(((totalHits - (double)Score.Statistics.GetOrDefault(HitResult.Miss)) / totalHits), (3 * (double)Score.Statistics.GetOrDefault(HitResult.Miss)));
             diffstrain *= Score.Accuracy;
@@ -245,8 +245,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             //Accuracy Strain Calculation
 
             //the formatting is inconsistent becuase for some reason doing the exact same thing on diff strain made different results somehow? idk why but ill leave it like that for now
-            double accstrain = (3.75 * Math.Pow(Attributes.StarRating, 1.1))
-                               * Math.Pow((230 / hit_window), 0.85)
+            double accstrain = (3.2 * Math.Pow(Attributes.StarRating, 1.2))
+                               * (215 / hit_window)
                                * Math.Pow(Score.Accuracy, 20)
                                * Math.Pow(base_length, 0.3)
                                * (mods.Any(m => m is ModHidden) ? 1.1 : 1.0);
