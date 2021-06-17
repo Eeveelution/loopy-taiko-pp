@@ -54,8 +54,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         }
 
         private double GetBonusHR(double effectiveBpm) {
-            if      (effectiveBpm >= 0.0 && effectiveBpm < 180) return 0.8 + (Math.Pow(effectiveBpm - 90,  2.0) / 40500.0);
-            else if (effectiveBpm >= 180 && effectiveBpm < 315) return 1.3 - (Math.Pow(effectiveBpm - 315, 2)   / 60750);
+            if      (effectiveBpm >= 0.0 && effectiveBpm < 160) return 0.85 + ((3 * (Math.Pow(effectiveBpm - 80, 2.0)) / 128000.0));
+            else if (effectiveBpm >= 160 && effectiveBpm < 320) return 1.3  - ((3 * (Math.Pow(effectiveBpm - 320, 2.0)) / 256000.0));
             else                                                return 1.3;
         }
 
@@ -235,9 +235,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             if (mods.Any(m => m is ModHalfTime))
                 hit_window *= 4.0 / 3.0;
 
-            double diffstrain = (Math.Pow(4.25 * Attributes.StarRating, 3) / 100);
+            double diffstrain = (Math.Pow(4.62 * Attributes.StarRating, 3) / 100);
             diffstrain *= length_bonus;
-            diffstrain *= Math.Pow(((totalHits - (double)Score.Statistics.GetOrDefault(HitResult.Miss)) / totalHits), (3 * (double)Score.Statistics.GetOrDefault(HitResult.Miss)));
+            diffstrain *= Math.Pow(((totalHits - Score.Statistics.GetOrDefault(HitResult.Miss)) / totalHits), (2 * Score.Statistics.GetOrDefault(HitResult.Miss)));
             diffstrain *= Score.Accuracy;
             diffstrain *= (mods.Any(m => m is ModFlashlight) ? length_bonus * 1.1 : 1.0);
             diffstrain *= sv_bonus;
@@ -245,8 +245,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             //Accuracy Strain Calculation
 
             //the formatting is inconsistent becuase for some reason doing the exact same thing on diff strain made different results somehow? idk why but ill leave it like that for now
-            double accstrain = (3.2 * Math.Pow(Attributes.StarRating, 1.2))
-                               * (215 / hit_window)
+            double accstrain = (3.3 * Math.Pow(Attributes.StarRating, 1.2))
+                               * (Math.Pow((240 / (hit_window + 3)), 0.9) - 1.3)
                                * Math.Pow(Score.Accuracy, 20)
                                * Math.Pow(base_length, 0.3)
                                * (mods.Any(m => m is ModHidden) ? 1.1 : 1.0);
