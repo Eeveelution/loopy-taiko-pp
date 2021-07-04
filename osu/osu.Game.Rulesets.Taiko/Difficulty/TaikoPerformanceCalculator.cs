@@ -237,7 +237,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             double diffstrain = (Math.Pow(4.62 * Attributes.StarRating, 3) / 100);
             diffstrain *= length_bonus;
-            diffstrain *= Math.Pow(((double)totalHits - (double)Score.Statistics.GetOrDefault(HitResult.Miss)) / (double)totalHits, 2.0 * (double)Score.Statistics.GetOrDefault(HitResult.Miss));
+            diffstrain *= Math.Max(0.0, Math.Pow(((totalHits - (double)Score.Statistics.GetOrDefault(HitResult.Miss)) / totalHits) - 1.0 / 600.0, 2.0 * (double)Score.Statistics.GetOrDefault(HitResult.Miss)));
             diffstrain *= Score.Accuracy;
             diffstrain *= (mods.Any(m => m is ModFlashlight) ? length_bonus * 1.1 : 1.0);
             diffstrain *= sv_bonus;
@@ -245,14 +245,16 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             //Accuracy Strain Calculation
 
             //the formatting is inconsistent becuase for some reason doing the exact same thing on diff strain made different results somehow? idk why but ill leave it like that for now
-            double accstrain = (3.3 * Math.Pow(Attributes.StarRating, 1.2))
-                               * (Math.Pow((240 / (hit_window + 3)), 0.9) - 1.3)
+            double accstrain = (3.2   * Math.Pow(Attributes.StarRating, 1.2))
+                               * ((190 / (hit_window + 1.5)) - 1.3)
                                * Math.Pow(Score.Accuracy, 20)
                                * Math.Pow(base_length, 0.3)
                                * (mods.Any(m => m is ModHidden) ? 1.1 : 1.0);
 
             //Total Combined PP from Both
-            double total_pp = Math.Pow(Math.Pow(diffstrain, 1.1) + Math.Pow(accstrain, 1.1), (1 / 1.1)) * (mods.Any(m => m is ModFlashlight) ? multiplier : 1.0);
+            double total_pp = Math.Pow(Math.Pow(diffstrain, 1.1) + Math.Pow(accstrain, 1.1), (1 / 1.1))
+                              * (mods.Any(m => m is ModFlashlight) ? multiplier : 1.0)
+                              * (mods.Any(m => m is ModHalfTime) ? 0.95 : 1.0);
 
             //Add it to Category difficulty (not sure if required but I'd rather do it
             categoryDifficulty?.Add("Strain", diffstrain);
