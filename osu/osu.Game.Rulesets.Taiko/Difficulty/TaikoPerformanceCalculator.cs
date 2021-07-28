@@ -114,7 +114,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         #region SV Bonus Calculation
 
         private double GetEffectiveBpmAverage() {
-            Stopwatch watch = Stopwatch.StartNew();
             //storing the function first, this is to optimize the code a little to avoid having to run mod checks every object,
             //assigned to `d => 1.0` so that later it doesnt complain about unassigned local variables
             Func<double, double> svBonusFunction = d => 1.0;
