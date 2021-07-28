@@ -153,7 +153,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
                 //double weighed = Math.Min(700.0 / this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier, bpm * sv);
 
-                double note_sv = sv * bpm;
+                double note_sv = (sv * bpm) * (this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
+
+
                 double sv_bonus = 0;
 
                 if (mods.Any(m => m is ModDoubleTime))
@@ -167,7 +169,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 results.Add(sv_bonus);
             }
 
-            double result = this.GetAverage(results.ToArray()) * (this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
+            double result = this.GetAverage(results.ToArray());
             //special case for nomod for safety
             if (!mods.Any())
                 result = 1.0;
