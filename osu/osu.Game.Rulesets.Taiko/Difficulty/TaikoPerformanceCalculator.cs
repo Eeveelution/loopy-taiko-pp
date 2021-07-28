@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using osu.Framework.Extensions;
 using osu.Game.Beatmaps;
@@ -113,6 +114,37 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         #region SV Bonus Calculation
 
         private double GetEffectiveBpmAverage() {
+            Stopwatch watch = Stopwatch.StartNew();
+            //storing the function first, this is to optimize the code a little to avoid having to run mod checks every object,
+            //assigned to `d => 1.0` so that later it doesnt complain about unassigned local variables
+            Func<double, double> svBonusFunction = d => 1.0;
+
+            if ( mods.Any(m => m is ModHidden)      &&
+                 !mods.Any(m => m is ModHardRock)   &&
+                 !mods.Any(m => m is ModFlashlight) &&
+                 !mods.Any(m => m is ModEasy))
+                svBonusFunction = GetBonusHD;
+
+            if ( mods.Any(m => m is ModHidden) &&
+                 mods.Any(m => m is ModEasy)   &&
+                 !mods.Any(m => m is ModFlashlight))
+                svBonusFunction = GetBonusEZHD;
+
+            if ( mods.Any(m => m is ModHardRock) &&
+                 !mods.Any(m => m is ModHidden)  &&
+                 !mods.Any(m => m is ModFlashlight))
+                svBonusFunction = GetBonusHR;
+
+            if (mods.Any(m => m is ModEasy)    &&
+                !mods.Any(m => m is ModHidden) &&
+                !mods.Any(m => m is ModFlashlight))
+                svBonusFunction = GetBonusEZ;
+
+            if (mods.Any(m => m is ModHidden)   &&
+                mods.Any(m => m is ModHardRock) &&
+                !mods.Any(m => m is ModFlashlight))
+                svBonusFunction = GetBonusHDHR;
+
             List<double> results = new List<double>();
 
             foreach (HitObject hitObject in Beatmap.HitObjects)
@@ -131,31 +163,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 if (mods.Any(m => m is ModHalfTime))
                     note_sv *= 0.75;
 
-                if ( mods.Any(m => m is ModHidden)      &&
-                     !mods.Any(m => m is ModHardRock)   &&
-                     !mods.Any(m => m is ModFlashlight) &&
-                     !mods.Any(m => m is ModEasy))
-                    sv_bonus = GetBonusHD(note_sv);
-
-                if ( mods.Any(m => m is ModHidden) &&
-                     mods.Any(m => m is ModEasy)   &&
-                     !mods.Any(m => m is ModFlashlight))
-                    sv_bonus = GetBonusEZHD(note_sv);
-
-                if ( mods.Any(m => m is ModHardRock) &&
-                     !mods.Any(m => m is ModHidden)  &&
-                     !mods.Any(m => m is ModFlashlight))
-                    sv_bonus = GetBonusHR(note_sv);
-
-                if (mods.Any(m => m is ModEasy)    &&
-                    !mods.Any(m => m is ModHidden) &&
-                    !mods.Any(m => m is ModFlashlight))
-                    sv_bonus = GetBonusEZ(note_sv);
-
-                if (mods.Any(m => m is ModHidden)   &&
-                    mods.Any(m => m is ModHardRock) &&
-                    !mods.Any(m => m is ModFlashlight))
-                    sv_bonus = GetBonusHDHR(note_sv);
+                sv_bonus = svBonusFunction(note_sv);
 
                 results.Add(sv_bonus);
             }
@@ -168,8 +176,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             return result;
         }
         #endregion
-
-
 
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null) {
             //Sets mods to the current score's Mods
