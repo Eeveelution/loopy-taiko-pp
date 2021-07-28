@@ -48,11 +48,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         }
 
         private double GetBonusHD(double effectiveBpm) {
-            if      (effectiveBpm >= 0.0   && effectiveBpm < 180.0) { return 1.4 - (Math.Pow(effectiveBpm          , 2.0) / 126000.0); }
-            else if (effectiveBpm >= 180.0 && effectiveBpm < 210.0) { return 1.1 + ( (Math.Pow(effectiveBpm - 210.0, 2.0) / 21000.0) );}
-            else if (effectiveBpm >= 210.0 && effectiveBpm < 240.0) { return 1.1 + ( (Math.Pow(effectiveBpm - 210.0, 2.0) / 24000.0) );}
-            else if (effectiveBpm >= 240.0 && effectiveBpm < 330.0) { return 1.25 - ((Math.Pow(effectiveBpm - 330.0, 2.0) / 72000.0)); }
-            else                                                    { return 1.25; }
+            if      (effectiveBpm >= 0.0   && effectiveBpm < 180.0) { return 1.3 - (Math.Pow(effectiveBpm          , 2.0) / 151200.0); }
+            else if (effectiveBpm >= 180.0 && effectiveBpm < 210.0) { return 1.05 + ( (Math.Pow(effectiveBpm - 210.0, 2.0) / 25200.0) );}
+            else if (effectiveBpm >= 210.0 && effectiveBpm < 240.0) { return 1.05 + ( (Math.Pow(effectiveBpm - 210.0, 2.0) / 36000.0) );}
+            else if (effectiveBpm >= 240.0 && effectiveBpm < 330.0) { return 1.15 - ((Math.Pow(effectiveBpm - 330.0, 2.0) / 108000.0)); }
+            else                                                    { return 1.15; }
         }
 
         private double GetBonusHR(double effectiveBpm) {
@@ -151,10 +151,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
 
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null) {
-            double test1 = GetBonusEZHD(160);
-            double test2 = GetBonusEZHD(200);
-            double test3 = GetBonusEZHD(300);
-            double test4 = GetBonusEZHD(360);
+            double test1 = GetBonusHD(160);
+            double test2 = GetBonusHD(200);
+            double test3 = GetBonusHD(220);
+            double test4 = GetBonusHD(260);
 
             //Sets mods to the current score's Mods
             mods = Score.Mods;
