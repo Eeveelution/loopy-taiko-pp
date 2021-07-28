@@ -120,91 +120,62 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 double sv = this.Beatmap.ControlPointInfo.DifficultyPointAt(hitObject.StartTime).SpeedMultiplier;
                 double bpm = this.Beatmap.ControlPointInfo.TimingPointAt(hitObject.StartTime).BPM;
 
-                double weighed = Math.Min(700.0 / this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier, bpm * sv);
+                //double weighed = Math.Min(700.0 / this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier, bpm * sv);
 
-                results.Add(weighed);
+                double note_sv = sv * bpm;
+                double sv_bonus = 0;
+
+                if (mods.Any(m => m is ModDoubleTime))
+                    note_sv *= 1.5;
+
+                if (mods.Any(m => m is ModHalfTime))
+                    note_sv *= 0.75;
+
+                if ( mods.Any(m => m is ModHidden)      &&
+                     !mods.Any(m => m is ModHardRock)   &&
+                     !mods.Any(m => m is ModFlashlight) &&
+                     !mods.Any(m => m is ModEasy))
+                    sv_bonus = GetBonusHD(note_sv);
+
+                if ( mods.Any(m => m is ModHidden) &&
+                     mods.Any(m => m is ModEasy)   &&
+                     !mods.Any(m => m is ModFlashlight))
+                    sv_bonus = GetBonusEZHD(note_sv);
+
+                if ( mods.Any(m => m is ModHardRock) &&
+                     !mods.Any(m => m is ModHidden)  &&
+                     !mods.Any(m => m is ModFlashlight))
+                    sv_bonus = GetBonusHR(note_sv);
+
+                if (mods.Any(m => m is ModEasy)    &&
+                    !mods.Any(m => m is ModHidden) &&
+                    !mods.Any(m => m is ModFlashlight))
+                    sv_bonus = GetBonusEZ(note_sv);
+
+                if (mods.Any(m => m is ModHidden)   &&
+                    mods.Any(m => m is ModHardRock) &&
+                    !mods.Any(m => m is ModFlashlight))
+                    sv_bonus = GetBonusHDHR(note_sv);
+
+                results.Add(sv_bonus);
             }
 
-            return this.GetAverage(results.ToArray()) * (this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
+            double result = this.GetAverage(results.ToArray()) * (this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
+            //special case for nomod for safety
+            if (!mods.Any())
+                result = 1.0;
+
+            return result;
         }
-        /// <summary>
-        /// For potentially switching to median.
-        /// </summary>
-        /// <returns></returns>
-        private double GetEffectiveBpmMedian() {
-            List<double> results = new List<double>();
-
-            foreach (HitObject hitObject in Beatmap.HitObjects)
-            {
-                double sv = this.Beatmap.ControlPointInfo.DifficultyPointAt(hitObject.StartTime).SpeedMultiplier;
-                double bpm = this.Beatmap.ControlPointInfo.TimingPointAt(hitObject.StartTime).BPM;
-
-                double weighed = Math.Min(700.0 / this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier, bpm * sv);
-
-                results.Add(weighed);
-            }
-
-            return this.GetMedian(results.ToArray()) * (this.Beatmap.BeatmapInfo.BaseDifficulty.SliderMultiplier / 1.4);
-        }
-
         #endregion
 
 
 
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null) {
-            double test1 = GetBonusHDHR(60);
-            double test2 = GetBonusHDHR(140);
-            double test3 = GetBonusHDHR(160);
-            double test4 = GetBonusHDHR(200);
-
             //Sets mods to the current score's Mods
             mods = Score.Mods;
             //Gets Effective Average (BPM * Slider Velocty) for Scroll Speed Calcuation
-            double average_sv = this.GetEffectiveBpmAverage();
-            double median_sv = this.GetEffectiveBpmMedian();
-
-            double sv_bonus = 1.0;
-#if DEBUG
-            Console.WriteLine("effective bpm average: {0}", average_sv);
-            Console.WriteLine("effective bpm median: {0}",  median_sv);
-#endif
-
-            #region Apply Curves to SV Bonus
-
-            if (mods.Any(m => m is ModDoubleTime))
-                average_sv *= 1.5;
-
-            if (mods.Any(m => m is ModHalfTime))
-                average_sv *= 0.75;
-
-            if ( mods.Any(m => m is ModHidden)     &&
-                !mods.Any(m => m is ModHardRock)   &&
-                !mods.Any(m => m is ModFlashlight) &&
-                !mods.Any(m => m is ModEasy))
-                    sv_bonus = GetBonusHD(average_sv);
-
-            if ( mods.Any(m => m is ModHidden)      &&
-                 mods.Any(m => m is ModEasy)        &&
-                !mods.Any(m => m is ModFlashlight))
-                    sv_bonus = GetBonusEZHD(average_sv);
-
-            if ( mods.Any(m => m is ModHardRock)    &&
-                !mods.Any(m => m is ModHidden)      &&
-                !mods.Any(m => m is ModFlashlight))
-                    sv_bonus = GetBonusHR(average_sv);
-
-            if (mods.Any(m => m is ModEasy)         &&
-                !mods.Any(m => m is ModHidden)      &&
-                !mods.Any(m => m is ModFlashlight))
-                    sv_bonus = GetBonusEZ(average_sv);
-
-            if (mods.Any(m => m is ModHidden)      &&
-                mods.Any(m => m is ModHardRock)    &&
-                !mods.Any(m => m is ModFlashlight))
-                    sv_bonus = GetBonusHDHR(average_sv);
-
-            #endregion
-
+            double sv_bonus = this.GetEffectiveBpmAverage();
             //Length Bonus
             double base_length = Math.Log((totalHits + 1500.0) / 1500.0, 2.0);
             double length_bonus = (Math.Pow(base_length, 0.75) / 10.0) + 1.0;
