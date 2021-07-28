@@ -33,9 +33,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         #region Graphs
 
         private double GetBonusEZ(double effectiveBpm) {
-            if      (effectiveBpm >= 0.0 && effectiveBpm < 160.0) { return 1.1  - (Math.Pow(effectiveBpm - 80.0 , 2.0) / 64000.0); }
-            else if (effectiveBpm >= 160 && effectiveBpm < 360.0) { return 0.75 + (Math.Pow(effectiveBpm - 360.0, 2.0) / 160000.0); }
-            else                                                  { return 0.75; }
+            if      (effectiveBpm >= 0.0 && effectiveBpm < 180.0) { return 1.1  - (Math.Pow(effectiveBpm - 90.0 , 2.0) / 81000.0); }
+            else if (effectiveBpm >= 180 && effectiveBpm < 315.0) { return 0.85 + (Math.Pow(effectiveBpm - 315.0, 2.0) / 121500.0); }
+            else                                                  { return 0.85; }
 
         }
 
@@ -149,6 +149,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
 
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null) {
+            double test1 = GetBonusEZ(160);
+            double test2 = GetBonusEZ(200);
+            double test3 = GetBonusEZ(320);
+
             //Sets mods to the current score's Mods
             mods = Score.Mods;
             //Gets Effective Average (BPM * Slider Velocty) for Scroll Speed Calcuation
@@ -194,8 +198,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 mods.Any(m => m is ModHardRock)    &&
                 !mods.Any(m => m is ModFlashlight))
                     sv_bonus = GetBonusHDHR(average_sv);
-
-
 
             #endregion
 
