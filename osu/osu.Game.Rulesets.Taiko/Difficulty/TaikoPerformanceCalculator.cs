@@ -56,9 +56,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         }
 
         private double GetBonusHR(double effectiveBpm) {
-            if      (effectiveBpm >= 0.0 && effectiveBpm < 160) return 0.85 + ((3 * (Math.Pow(effectiveBpm - 80, 2.0)) / 128000.0));
-            else if (effectiveBpm >= 160 && effectiveBpm < 320) return 1.3  - ((3 * (Math.Pow(effectiveBpm - 320, 2.0)) / 256000.0));
-            else                                                return 1.3;
+            if      (effectiveBpm >= 0.0 && effectiveBpm < 160) return 0.9 + (Math.Pow((effectiveBpm - 80.0), 2) / 64000.0);
+            else if (effectiveBpm >= 160 && effectiveBpm < 320) return 1.2 - (Math.Pow((effectiveBpm - 320.0), 2) / 128000.0);
+            else                                                return 1.2;
         }
 
         private double GetBonusHDHR(double effectiveBpm) {
@@ -151,10 +151,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
 
         public override double Calculate(Dictionary<string, double> categoryDifficulty = null) {
-            double test1 = GetBonusHD(160);
-            double test2 = GetBonusHD(200);
-            double test3 = GetBonusHD(220);
-            double test4 = GetBonusHD(260);
+            double test1 = GetBonusHR(140);
+            double test2 = GetBonusHR(200);
 
             //Sets mods to the current score's Mods
             mods = Score.Mods;
