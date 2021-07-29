@@ -191,7 +191,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             int modHidden = (mods.Any(m => m is ModHidden) ? 1 : 0);
             int modEasy = (mods.Any(m => m is ModEasy) ? 1 : 0);
 
-            double mod_multiplier_count = Math.Pow(1.05, modHardrock + modHidden) * Math.Pow(0.9, modEasy);
+            double mod_multiplier_count = Math.Pow(1.05, modHardrock + modHidden) * Math.Pow(0.95, modEasy);
             double multiplier = length_bonus * mod_multiplier_count;
 
             //Maps Overall Difficulty value, gets changed with the Easy, Half Time, Hard Rock and Double Time mods
