@@ -49,10 +49,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         }
 
         private double GetBonusHD(double effectiveBpm) {
-            if      (effectiveBpm >= 0.0   && effectiveBpm < 180.0) { return 1.3 - (Math.Pow(effectiveBpm          , 2.0) / 151200.0); }
-            else if (effectiveBpm >= 180.0 && effectiveBpm < 210.0) { return 1.05 + ( (Math.Pow(effectiveBpm - 210.0, 2.0) / 25200.0) );}
-            else if (effectiveBpm >= 210.0 && effectiveBpm < 240.0) { return 1.05 + ( (Math.Pow(effectiveBpm - 210.0, 2.0) / 36000.0) );}
-            else if (effectiveBpm >= 240.0 && effectiveBpm < 330.0) { return 1.15 - ((Math.Pow(effectiveBpm - 330.0, 2.0) / 108000.0)); }
+            if      (effectiveBpm >= 0.0   && effectiveBpm < 180.0) { return 1.3 - (Math.Pow(effectiveBpm          , 2.0) / 168000.0); }
+            else if (effectiveBpm >= 180.0 && effectiveBpm < 210.0) { return 1.075 + ( (Math.Pow(effectiveBpm - 210.0, 2.0) / 28000.0) );}
+            else if (effectiveBpm >= 210.0 && effectiveBpm < 240.0) { return 1.075 + ( (Math.Pow(effectiveBpm - 210.0, 2.0) / 48000.0) );}
+            else if (effectiveBpm >= 240.0 && effectiveBpm < 330.0) { return 1.15 - ((Math.Pow(effectiveBpm - 330.0, 2.0) / 144000.0)); }
             else                                                    { return 1.15; }
         }
 
