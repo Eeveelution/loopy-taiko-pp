@@ -187,12 +187,19 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double base_length = Math.Log((totalHits + 1500.0) / 1500.0, 2.0);
             double length_bonus = (Math.Pow(base_length, 0.75) / 10.0) + 1.0;
 
-            int modHardrock = (mods.Any(m => m is ModHardRock) ? 1 : 0);
-            int modHidden = (mods.Any(m => m is ModHidden) ? 1 : 0);
-            int modEasy = (mods.Any(m => m is ModEasy) ? 1 : 0);
+            double multiplier = 0;
 
-            double mod_multiplier_count = Math.Pow(1.05, modHardrock + modHidden) * Math.Pow(0.95, modEasy);
-            double multiplier = length_bonus * mod_multiplier_count;
+            if (mods.Any(m => m is ModFlashlight))
+            {
+                if (!mods.Any(m => m is ModHidden))
+                {
+                    multiplier = length_bonus;
+                }
+                else
+                {
+                    multiplier = 1.05 * length_bonus;
+                }
+            }
 
             //Maps Overall Difficulty value, gets changed with the Easy, Half Time, Hard Rock and Double Time mods
             double overall_difficulty = Attributes.Beatmap.BeatmapInfo.BaseDifficulty.OverallDifficulty;
@@ -219,26 +226,25 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             if (mods.Any(m => m is ModHalfTime))
                 hit_window *= 4.0 / 3.0;
 
-            double diffstrain = (Math.Pow(4.62 * Attributes.StarRating, 3) / 100);
+            double diffstrain = (Math.Pow(4.55 * Attributes.StarRating, 3) / 100.0);
             diffstrain *= length_bonus;
             diffstrain *= Math.Max(0.0, Math.Pow(((totalHits - (double)Score.Statistics.GetOrDefault(HitResult.Miss)) / totalHits) - 1.0 / 600.0, 2.0 * (double)Score.Statistics.GetOrDefault(HitResult.Miss)));
             diffstrain *= Score.Accuracy;
-            diffstrain *= (mods.Any(m => m is ModFlashlight) ? length_bonus * 1.1 : 1.0);
+            diffstrain *= (mods.Any(m => m is ModFlashlight) ? length_bonus * 1.05 : 1.0);
             diffstrain *= sv_bonus;
 
             //Accuracy Strain Calculation
 
             //the formatting is inconsistent becuase for some reason doing the exact same thing on diff strain made different results somehow? idk why but ill leave it like that for now
-            double accstrain = (3.2   * Math.Pow(Attributes.StarRating, 1.2))
-                               * ((190 / (hit_window + 1.5)) - 1.3)
-                               * Math.Pow(Score.Accuracy, 20)
+            double accstrain =   (3.75 * Math.Pow(Attributes.StarRating, 1.1))
+                               * Math.Pow(3.0, (2.8 - 0.04 * hit_window))
+                               * Math.Pow(Score.Accuracy, 5 * Math.Sqrt(hit_window))
                                * Math.Pow(base_length, 0.3)
                                * (mods.Any(m => m is ModHidden) ? 1.1 : 1.0);
 
             //Total Combined PP from Both
             double total_pp = Math.Pow(Math.Pow(diffstrain, 1.1) + Math.Pow(accstrain, 1.1), (1 / 1.1))
-                              * (mods.Any(m => m is ModFlashlight) ? multiplier : 1.0)
-                              * (mods.Any(m => m is ModHalfTime) ? 0.95 : 1.0);
+                              * (mods.Any(m => m is ModFlashlight) ? multiplier : 1.0);
 
             //Add it to Category difficulty (not sure if required but I'd rather do it
             categoryDifficulty?.Add("Strain", diffstrain);
