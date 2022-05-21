@@ -34,18 +34,18 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         #region Graphs
 
         private double GetBonusEZ(double effectiveBpm) {
-            if      (effectiveBpm >= 0.0 && effectiveBpm < 180.0) { return 1.1  - (Math.Pow(effectiveBpm - 90.0 , 2.0) / 81000.0); }
-            else if (effectiveBpm >= 180 && effectiveBpm < 315.0) { return 0.85 + (Math.Pow(effectiveBpm - 315.0, 2.0) / 121500.0); }
-            else                                                  { return 0.85; }
+            if      (effectiveBpm >= 0.0 && effectiveBpm < 160.0) { return 1.1 - (Math.Pow(effectiveBpm - 80.0 , 2.0) / 64000.0); }
+            else if (effectiveBpm >= 160 && effectiveBpm < 320.0) { return 0.8 + (Math.Pow(effectiveBpm - 320.0, 2.0) / 128000.0); }
+            else                                                  { return 0.8; }
 
         }
 
         private double GetBonusEZHD(double effectiveBpm) {
-            if      (effectiveBpm >= 0.0   && effectiveBpm < 195.0) { return 1.3 - (Math.Pow(effectiveBpm,           2.0) / 126750.0); }
-            else if (effectiveBpm >= 195.0 && effectiveBpm < 260.0) { return 0.9 + (Math.Pow((effectiveBpm - 260.0), 2.0) / 42250.0);  }
-            else if (effectiveBpm >= 260.0 && effectiveBpm < 340.0) { return 0.9 + (Math.Pow((effectiveBpm - 260.0), 2.0) / 128000.0);  }
-            else if (effectiveBpm >= 340.0 && effectiveBpm < 420.0) { return 1.0 - (Math.Pow((effectiveBpm - 420.0), 2.0) / 128000.0);  }
-            else                                                    { return 1.0; }
+            if      (effectiveBpm >= 0.0   && effectiveBpm < 186.0) { return 1.3  - (Math.Pow(effectiveBpm,           2.0) / 115320.0); }
+            else if (effectiveBpm >= 186.0 && effectiveBpm < 279.0) { return 0.85 + (Math.Pow((effectiveBpm - 279.0), 2.0) / 57660.0);  }
+            else if (effectiveBpm >= 279.0 && effectiveBpm < 349.5) { return 0.85 + (Math.Pow((effectiveBpm - 279.0), 2.0) / 66270.0);  }
+            else if (effectiveBpm >= 349.5 && effectiveBpm < 420.0) { return 1.0  - (Math.Pow((effectiveBpm - 420.0), 2.0) / 66270.0);  }
+            else                                                    { return 1.0;  }
         }
 
         private double GetBonusHD(double effectiveBpm) {
@@ -67,7 +67,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             else if (effectiveBpm >= 120 && effectiveBpm < 150) return 1.1 + (Math.Pow(effectiveBpm - 150.0, 2)   / 22500.0);
             else if (effectiveBpm >= 150 && effectiveBpm < 180) return 1.1 + (Math.Pow(effectiveBpm - 150.0, 2)   / 18000.0);
             else if (effectiveBpm >= 180 && effectiveBpm < 240) return 1.25 - (Math.Pow(effectiveBpm - 240.0, 2)   / 36000.0);
-            else                                                return 1.4;
+            else                                                return 1.25;
         }
 
 
